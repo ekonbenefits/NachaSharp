@@ -32,7 +32,7 @@ type FileHeaderRecord(rowInput) =
                                     MetaColumn.Make(this.FormatCode, 1, Format.leftPadString)
                                     MetaColumn.Make(this.IntermediateDestinationName,23, Format.rightPadString)
                                     MetaColumn.Make(this.IntermediateOriginName,23, Format.rightPadString)
-                                    MetaColumn.Make(this.RefernceCode, 8, Format.rightPadString)
+                                    MetaColumn.Make(this.ReferenceCode, 8, Format.rightPadString)
                                   ]
                          length = 94
                      })
@@ -86,7 +86,7 @@ type FileHeaderRecord(rowInput) =
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
 
-    member this.RefernceCode
+    member this.ReferenceCode
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
         
