@@ -6,6 +6,6 @@
     <Compile Include="Library.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Interop.Compose" Version="2.0.1-alpha36" />
+    <ProjectReference Include="..\FSharp.Data.FlatFileMeta\FSharp.Data.FlatFileMeta.fsproj" />
   </ItemGroup>
 </Project>
