@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Data.FlatFileMeta", "FSharp.Data.FlatFileMeta\FSharp.Data.FlatFileMeta.fsproj", "{CE2A6EF3-E16C-4CEB-9BBC-B52EAFE6A5B5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE2A6EF3-E16C-4CEB-9BBC-B52EAFE6A5B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE2A6EF3-E16C-4CEB-9BBC-B52EAFE6A5B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE2A6EF3-E16C-4CEB-9BBC-B52EAFE6A5B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE2A6EF3-E16C-4CEB-9BBC-B52EAFE6A5B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
