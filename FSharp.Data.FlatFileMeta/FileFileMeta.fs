@@ -30,7 +30,7 @@ type ParsedMeta = int * string list * Map<string, int * ColumnIdentifier>
 type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
 [<AbstractClass>]
-type BaseFlatRecord(rowInput:string option) =
+type BaseFlatRecord<'BaseType>(rowInput:string option) =
         
     let mutable rawData: string array = Array.empty
     let mutable columnKeys: string list = List.empty

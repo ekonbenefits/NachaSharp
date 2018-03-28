@@ -46,7 +46,7 @@ module Format =
         let setOptHHMM = toStringOpt "HHmm"
         
         
-    let costantString (v:string):FormatPairs<_> = (fun _ -> v), (fun _ _ -> v)
+    let constantString (v:string):FormatPairs<_> = (fun _ -> v), (fun _ _ -> v)
     let zerodInt:FormatPairs<_>  = (Int.getReq, Int.setZerod)
     let rightPadString:FormatPairs<_> = (Str.getRightTrim, Str.setRightPad)
     let leftPadString:FormatPairs<_>  = (Str.getLeftTrim, Str.setLeftPad)

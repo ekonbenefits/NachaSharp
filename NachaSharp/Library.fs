@@ -4,23 +4,48 @@ open FSharp.Data.FlatFileMeta
 open System
 open System.Runtime.InteropServices.ComTypes
 
+[<AbstractClass>]
+type Record(rowInput) =
+    inherit BaseFlatRecord<Record>(rowInput)
 
-module File =
-    let Parse (lines: string seq) =
-        ()
+[<AbstractClass>]
+type EntryAddenda(rowInput) =
+    inherit Record(rowInput)
+
+[<AbstractClass>]
+type EntryDetail(rowInput) =
+    inherit Record(rowInput)
+    member val Trailer: EntryAddenda option = Option.None with get,set
+    
+[<AbstractClass>]
+type BatchControlRecord(rowInput) =
+    inherit Record(rowInput) 
         
+[<AbstractClass>]
+type BatchHeaderRecord(rowInput) =
+    inherit Record(rowInput)
+    member val Children: EntryDetail list = List.empty with get,set
+    member val Trailer: BatchControlRecord option = Option.None with get,set
+    
+[<AbstractClass>]
+type FileControlRecord(rowInput) =
+    inherit Record(rowInput)
+       
 type FileHeaderRecord(rowInput) =
-    inherit BaseFlatRecord(rowInput)
+    inherit Record(rowInput)
     
     let recordTypeCode = "1"
     
+    member val Children: BatchHeaderRecord list = List.empty with get,set
+    member val Trailer: FileControlRecord option = Option.None with get,set
+        
     override this.IsIdentified() =
             this.RecordTypeCode = recordTypeCode 
             
     override this.Setup () = 
                 lazy ({ 
                          columns =[
-                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.costantString recordTypeCode)
+                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.constantString recordTypeCode)
                                     MetaColumn.Make(this.PriorityCode, 2, Format.zerodInt)
                                     MetaColumn.Make(this.IntermediateDestination, 10, Format.leftPadString)
                                     MetaColumn.Make(this.IntermediateOrigin, 10, Format.leftPadString)
@@ -90,4 +115,21 @@ type FileHeaderRecord(rowInput) =
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
         
+module File =
+    let Parse (lines: string seq) =
+        let recordType 
     
+        let processLine (state: FileHeaderRecord Option) item =
+            match state with
+               | None -> let record = FileHeaderRecord(Some(item))
+                         if (not <| record.IsIdentified()) then
+                             raise <| Exception("Parse Error")
+                         record
+               | Some (x) -> 
+                         []
+               
+               
+                         x
+                            
+        
+        lines |> Seq.fold processLine None
