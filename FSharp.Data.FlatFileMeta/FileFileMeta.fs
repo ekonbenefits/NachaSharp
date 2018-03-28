@@ -38,8 +38,12 @@ type BaseFlatRecord(rowInput:string option) =
     let mutable columnLength: int = 0
     
     abstract Setup: unit -> ParsedMeta
-    abstract IsValid: unit -> bool
-    default this.IsValid () = this.Row |> Array.length = columnLength
+    
+    member this.IsMatch() = this.DoesLengthMatch() && this.IsIdentified ()
+    
+    abstract IsIdentified: unit -> bool
+    
+    member this.DoesLengthMatch () = this.Row |> Array.length = columnLength
 
     member private this.LazySetup() =
         if columnMap |> Map.isEmpty then

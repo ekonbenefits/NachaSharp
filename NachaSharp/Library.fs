@@ -12,10 +12,15 @@ module File =
 type FileHeaderRecord(rowInput) =
     inherit BaseFlatRecord(rowInput)
     
+    let recordTypeCode = "1"
+    
+    override this.IsIdentified() =
+            this.RecordTypeCode = recordTypeCode 
+            
     override this.Setup () = 
                 lazy ({ 
                          columns =[
-                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.rightPadString)
+                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.costantString recordTypeCode)
                                     MetaColumn.Make(this.PriorityCode, 2, Format.zerodInt)
                                     MetaColumn.Make(this.IntermediateDestination, 10, Format.leftPadString)
                                     MetaColumn.Make(this.IntermediateOrigin, 10, Format.leftPadString)
@@ -32,7 +37,6 @@ type FileHeaderRecord(rowInput) =
                          length = 94
                      })
                 |> MetaDataHelper.setup this
-                
         
     member this.RecordTypeCode
         with get () = this.GetColumn ()

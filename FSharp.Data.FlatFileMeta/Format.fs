@@ -4,6 +4,8 @@ open FSharp.Interop.Compose.System
 
 module Format =
 
+    type FormatPairs<'T> = (string -> 'T) * (int -> 'T -> string)
+
     module Str =
         let fillToLengthWith char length =  Array.init length (fun _ -> char) |> String
         let fillToLength = fillToLengthWith ' '
@@ -43,8 +45,10 @@ module Format =
         let getOptHHMM = parseOpt "HHmm"
         let setOptHHMM = toStringOpt "HHmm"
         
-    let zerodInt = (Int.getReq, Int.setZerod)
-    let rightPadString = (Str.getRightTrim, Str.setRightPad)
-    let leftPadString = (Str.getLeftTrim, Str.setLeftPad)
-    let reqYYMMDD = (DateAndTime.getYYMMDD, DateAndTime.setYYMMDD)
-    let optHHMM = (DateAndTime.getOptHHMM, DateAndTime.setOptHHMM)
+        
+    let costantString (v:string):FormatPairs<_> = (fun _ -> v), (fun _ _ -> v)
+    let zerodInt:FormatPairs<_>  = (Int.getReq, Int.setZerod)
+    let rightPadString:FormatPairs<_> = (Str.getRightTrim, Str.setRightPad)
+    let leftPadString:FormatPairs<_>  = (Str.getLeftTrim, Str.setLeftPad)
+    let reqYYMMDD:FormatPairs<_>  = (DateAndTime.getYYMMDD, DateAndTime.setYYMMDD)
+    let optHHMM:FormatPairs<_>  = (DateAndTime.getOptHHMM, DateAndTime.setOptHHMM)
