@@ -75,6 +75,8 @@ type MetaColumn =
 
 type ParsedMeta = int * string list * Map<string, int * ColumnIdentifier>
 
+type DefinedMeta = { columns: ColumnIdentifier list; length :int }
+
 [<AbstractClass>]
 type BaseFlatRecord(rowInput:string option) =
         
@@ -138,21 +140,21 @@ type BaseFlatRecord(rowInput:string option) =
 module MetaDataHelper =
     let cache = Dictionary<_, _>()
 
-    let setup<'T> (v:'T -> ColumnIdentifier list * int) (record:'T) : ParsedMeta = 
+    let setup<'T>  (record:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
         let k = typeof<'T>;
         if cache.ContainsKey(k) then
             cache.[k]
         else
-            let cols, totalLength = record |> v
-            let sumLength = cols |> List.sumBy (fun x->x.Length)
-            if sumLength <> totalLength then
-                raise <| InvalidDataException(sprintf "Data columns sum to %i which is not the expected value %i" sumLength totalLength)
+            let meta = v.Force()
+            let sumLength = meta.columns |> List.sumBy (fun x->x.Length)
+            if sumLength <> meta.length then
+                raise <| InvalidDataException(sprintf "Data columns sum to %i which is not the expected value %i" sumLength meta.length)
             try
-                let result = totalLength,
-                             cols |> List.map (fun x->x.Key),
-                             cols 
+                let result = meta.length,
+                             meta.columns |> List.map (fun x->x.Key),
+                             meta.columns 
                                  |> Seq.scan (fun state i -> i.Length + state) 0
-                                 |> Seq.zip cols
+                                 |> Seq.zip meta.columns
                                  |> Seq.map (fun (c, i) -> c.Key, (i,c))
                                  |> Map.ofSeq
                 cache.[k] <- result
