@@ -9,7 +9,7 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 type NachaRecord(rowInput, recordTypeCode) =
     inherit FlatRecord(rowInput)
     override this.IsIdentified() =
-            this.RecordTypeCode = recordTypeCode
+        this.RecordTypeCode = recordTypeCode
     member this.RecordTypeCode
         with get () = this.GetColumn ()
         and set value = this.SetColumn<string> value
@@ -23,7 +23,7 @@ type EntryDetail(rowInput,recordTypeCode ) =
     inherit NachaRecord(rowInput, recordTypeCode)
     
     member this.Addenda 
-                with get () = this.GetChild<EntryAddenda IList>(lazy upcast List())
+        with get () = this.GetChild<EntryAddenda IList>(lazy upcast List())
     
     member this.AddendaRecordedIndicator
         with get () = this.GetColumn<int> ()
@@ -71,10 +71,10 @@ type BatchHeaderRecord(rowInput) =
                      })
 
     member this.Entries 
-            with get () = this.GetChild<EntryDetail IList>(lazy upcast List())
+        with get () = this.GetChild<EntryDetail IList>(lazy upcast List())
     member this.BatchControl 
-            with get () = this.GetChild<BatchControlRecord MaybeRecord>(lazy NoRecord)
-            and set value = this.SetChild<BatchControlRecord MaybeRecord>(value)
+        with get () = this.GetChild<BatchControlRecord MaybeRecord>(lazy NoRecord)
+        and set value = this.SetChild<BatchControlRecord MaybeRecord>(value)
 
 
 
@@ -94,10 +94,10 @@ type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")
     
     member this.Batches 
-            with get () = this.GetChild<BatchHeaderRecord IList>(lazy upcast List())
+        with get () = this.GetChild<BatchHeaderRecord IList>(lazy upcast List())
     member this.FileControl 
-            with get () = this.GetChild<FileControlRecord MaybeRecord>(lazy NoRecord)
-            and set value = this.SetChild<FileControlRecord MaybeRecord>(value)
+        with get () = this.GetChild<FileControlRecord MaybeRecord>(lazy NoRecord)
+        and set value = this.SetChild<FileControlRecord MaybeRecord>(value)
         
     override this.Setup () = 
         setup this <|
