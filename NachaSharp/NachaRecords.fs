@@ -14,13 +14,19 @@ type NachaRecord(rowInput, recordTypeCode) =
         with get () = this.GetColumn ()
         and set value = this.SetColumn<string> value
   
-[<AbstractClass>]
 type EntryAddenda(rowInput) =
     inherit NachaRecord(rowInput, "X")
+    override this.Setup () = 
+        setup this <|
+                lazy ({ 
+                         columns =[
+                                  ]
+                         length = 94
+                     })
 
 type EntryDetail(rowInput) =
     inherit NachaRecord(rowInput, "X")
-    member val Trailer: EntryAddenda option = Option.None with get,set
+    member val Addenda: EntryAddenda option = Option.None with get,set
     override this.Setup () = 
         setup this <|
                 lazy ({ 
