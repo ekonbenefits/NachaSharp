@@ -4,43 +4,80 @@ open System
 open FSharp.Data.FlatFileMeta
 open FSharp.Data.FlatFileMeta.MetaDataHelper
 
-
-
+[<AbstractClass>]
+type NachaRecord(rowInput, recordTypeCode) =
+    inherit FlatRecord(rowInput)
+    member __.IdentifyingRecordTypeCode = recordTypeCode
+    override this.IsIdentified() =
+            this.RecordTypeCode = this.IdentifyingRecordTypeCode
+    member this.RecordTypeCode
+        with get () = this.GetColumn ()
+        and set value = this.SetColumn<string> value
+  
 [<AbstractClass>]
 type EntryAddenda(rowInput) =
-    inherit FlatRecord(rowInput)
+    inherit NachaRecord(rowInput, "X")
 
 type EntryDetail(rowInput) =
-    inherit FlatRecord(rowInput)
+    inherit NachaRecord(rowInput, "X")
     member val Trailer: EntryAddenda option = Option.None with get,set
+    override this.Setup () = 
+        setup this <|
+                lazy ({ 
+                         columns =[
+                                  ]
+                         length = 94
+                     })
     
 type BatchControlRecord(rowInput) =
-    inherit FlatRecord(rowInput) 
+    inherit NachaRecord(rowInput, "X")
+    override this.Setup () = 
+        setup this <|
+                lazy ({ 
+                         columns =[
+                                  ]
+                         length = 94
+                     })
+
         
 type BatchHeaderRecord(rowInput) =
-    inherit FlatRecord(rowInput)
+    inherit NachaRecord(rowInput, "X")
+    override this.Setup () = 
+        setup this <|
+                lazy ({ 
+                         columns =[
+                                  ]
+                         length = 94
+                     })
+
     member val Children: EntryDetail list = List.empty with get,set
     member val Trailer: BatchControlRecord option = Option.None with get,set
+
+
+
     
 type FileControlRecord(rowInput) =
-    inherit FlatRecord(rowInput)
+    inherit NachaRecord(rowInput, "X")
+
+    override this.Setup () = 
+        setup this <|
+                lazy ({ 
+                         columns =[
+                                  ]
+                         length = 94
+                     })
        
 type FileHeaderRecord(rowInput) =
-    inherit FlatRecord(rowInput)
-
-    let recordTypeCode = "1"
+    inherit NachaRecord(rowInput, "1")
     
     member val Children: BatchHeaderRecord list = List.empty with get,set
     member val Trailer: FileControlRecord option = Option.None with get,set
-        
-    override this.IsIdentified() =
-            this.RecordTypeCode = recordTypeCode 
             
     override this.Setup () = 
         setup this <|
                 lazy ({ 
                          columns =[
-                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.constantString recordTypeCode)
+                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.constantString this.IdentifyingRecordTypeCode)
                                     MetaColumn.Make(this.PriorityCode, 2, Format.zerodInt)
                                     MetaColumn.Make(this.IntermediateDestination, 10, Format.leftPadString)
                                     MetaColumn.Make(this.IntermediateOrigin, 10, Format.leftPadString)
@@ -56,10 +93,6 @@ type FileHeaderRecord(rowInput) =
                                   ]
                          length = 94
                      })
-        
-    member this.RecordTypeCode
-        with get () = this.GetColumn ()
-        and set value = this.SetColumn<string> value
         
     member this.PriorityCode
         with get () = this.GetColumn()
@@ -108,39 +141,3 @@ type FileHeaderRecord(rowInput) =
     member this.ReferenceCode
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
-        
-module File =
-
-    let (|FileHeaderMatch|_|)=
-        matchRecord(FileHeaderRecord) 
-    let (|FileControlMatch|_|)=
-        matchRecord(FileControlRecord) 
-    let (|BatchHeaderMatch|_|) =
-        matchRecord(BatchHeaderRecord) 
-    let (|BatchControlMatch|_|) =
-        matchRecord(BatchControlRecord) 
-    let (|EntryDetailMatch|_|) =
-        matchRecord(EntryDetail) 
-
-    let Parse (lines: string seq) =
-        let mutable head: FileHeaderRecord option = None
-        let enumerator = lines.GetEnumerator();
-        while head.IsNone && enumerator.MoveNext() do
-            match enumerator.Current with
-                | FileHeaderMatch (fh) -> 
-                    head <- Some(fh)
-                    while fh.Trailer.IsNone && enumerator.MoveNext() do
-                        match enumerator.Current with
-                            | FileControlMatch t ->
-                                fh.Trailer <- Some(t)
-                            | BatchHeaderMatch bh ->
-                                fh.Children <- fh.Children @ [bh]
-                                while bh.Trailer.IsNone && enumerator.MoveNext() do
-                                    match enumerator.Current with
-                                        | BatchControlMatch  bt -> bh.Trailer <- Some(bt)
-                                        | EntryDetailMatch ed ->
-                                            bh.Children <- bh.Children @ [ed]
-                                        | _ -> ()
-                            | _ -> ()
-                | _ -> ()
-        head

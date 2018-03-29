@@ -31,12 +31,18 @@ type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
 [<AbstractClass>]
 type FlatRecord(rowInput:string option) =
-        
     let mutable rawData: string array = Array.empty
     let mutable columnKeys: string list = List.empty
     let mutable columnMap: Map<string, int * ColumnIdentifier> = Map.empty
     let mutable columnLength: int = 0
     
+    static member Create<'T when 'T :> FlatRecord>
+                    (constructor:string option -> 'T,
+                     init: 'T -> unit) =
+                     let result = None |> constructor
+                     result |> init
+                     result
+
     abstract Setup: unit -> ParsedMeta
     
     member this.IsMatch() = this.DoesLengthMatch() && this.IsIdentified ()

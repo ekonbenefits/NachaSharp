@@ -1,11 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <ProjectReference Include="..\FSharp.Data.FlatFileMeta\FSharp.Data.FlatFileMeta.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FSharp.Data.FlatFileMeta\FSharp.Data.FlatFileMeta.fsproj" />
+    <Compile Include="NachaRecords.fs" />
+    <Compile Include="NachaFile.fs" />
   </ItemGroup>
 </Project>
