@@ -76,6 +76,9 @@ type FlatRecord(rowInput:string option) =
     
     member this.Data(key:string):obj=
         this.GetColumn(key) |> box
+        
+    member this.ToRawString() =
+        this.Row |> String.concat ""
     
     member this.RawData(key:string)=
         let start, columnIdent = this.ColumnMap |> Map.find key
