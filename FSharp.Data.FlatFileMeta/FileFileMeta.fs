@@ -114,7 +114,7 @@ type FlatRecord(rowData:string) =
     member __.GetChild<'T>(defaultValue: 'T Lazy, [<CallerMemberName>] ?memberName: string) : 'T = 
             let key = 
                 memberName
-                   |> Option.defaultWith (invalidArg "memberName" "Compiler should automatically fill this value")
+                   |> Option.defaultWith (Helper.raiseMissingCompilerMemberName())
             match children.TryGetValue(key) with
                 | true,v -> downcast v
                 | ______ -> let d = defaultValue.Force()
@@ -124,7 +124,7 @@ type FlatRecord(rowData:string) =
     member __.SetChild<'T>(value:'T, [<CallerMemberName>] ?memberName: string) : unit = 
                 let key = 
                     memberName
-                       |> Option.defaultWith (invalidArg "memberName" "Compiler should automatically fill this value")
+                       |> Option.defaultWith (Helper.raiseMissingCompilerMemberName())
                 children.Add(key, value)
             
             
@@ -132,7 +132,7 @@ type FlatRecord(rowData:string) =
         let start, columnIdent =
             match memberName with
                 | Some(k) -> this.ColumnMap.[k]
-                | None -> invalidArg "memberName" "Compiler should automatically fill this value"
+                | None -> Helper.raiseMissingCompilerMemberName()
         let endSlice = start - 1 + columnIdent.Length 
         let slice = this.Row.[start..endSlice]
         let data = slice |> String.concat ""
@@ -143,7 +143,7 @@ type FlatRecord(rowData:string) =
         let start, columnIdent =
             match memberName with
                  | Some(k) -> this.ColumnMap.[k]
-                 | None -> invalidArg "memberName" "Compiler should automatically fill this value"
+                 | None -> Helper.raiseMissingCompilerMemberName()
         let columnDef:Column<'T> = downcast columnIdent
         let stringVal = value |> columnDef.SetValue columnIdent.Length
         let newSlice =stringVal.ToCharArray() |> Array.map string

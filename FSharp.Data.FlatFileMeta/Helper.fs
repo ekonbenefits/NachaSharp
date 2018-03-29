@@ -3,6 +3,10 @@ namespace FSharp.Data.FlatFileMeta
 open System
 
 module internal Helper =
+    let inline raiseMissingCompilerMemberName ()
+        = invalidArg "memberName" "Compiler should automatically fill this value"
+
+
     let inline optionOfStringEmpty str =
                     if str |> String.IsNullOrEmpty then 
                         None
