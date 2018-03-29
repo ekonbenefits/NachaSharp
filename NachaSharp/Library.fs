@@ -128,17 +128,17 @@ module File =
     let Parse (lines: string seq) =
         let mutable head: FileHeaderRecord option = None
         let enumerator = lines.GetEnumerator();
-        while head |> Option.isNone && enumerator.MoveNext() do
+        while head.IsNone && enumerator.MoveNext() do
             match enumerator.Current with
                 | FileHeaderMatch (fh) -> 
                     head <- Some(fh)
-                    while fh.Trailer |> Option.isNone && enumerator.MoveNext() do
+                    while fh.Trailer.IsNone && enumerator.MoveNext() do
                         match enumerator.Current with
                             | FileControlMatch t ->
                                 fh.Trailer <- Some(t)
                             | BatchHeaderMatch bh ->
                                 fh.Children <- fh.Children @ [bh]
-                                while bh.Trailer |> Option.isNone && enumerator.MoveNext() do
+                                while bh.Trailer.IsNone && enumerator.MoveNext() do
                                     match enumerator.Current with
                                         | BatchControlMatch  bt -> bh.Trailer <- Some(bt)
                                         | EntryDetailMatch ed ->
