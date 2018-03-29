@@ -199,7 +199,7 @@ module MetaDataHelper =
                             match found with
                                 | Some(line) ->
                                     yield line
-                                | None -> ()
+                                | None -> completed <- true
                   }
         async {
             return! seq |> parser
