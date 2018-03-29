@@ -36,6 +36,16 @@ type EntryDetail(entrySEC, batchSEC, rowInput) =
         with get () = this.GetColumn<int> ()
         and set value = this.SetColumn<int> value
 
+type EntryWildCard(batchSEC, rowInput) =
+    inherit EntryDetail(batchSEC, batchSEC, rowInput)
+    override this.Setup () = 
+        setup this <|
+                lazy ({ 
+                         columns =[
+                                  ]
+                         length = 94
+                     })
+
 type EntryCCD(batchSEC, rowInput) =
     inherit EntryDetail("CCD", batchSEC, rowInput)
     override this.Setup () = 

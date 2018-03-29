@@ -18,6 +18,7 @@ module rec NachaFile =
         multiMatch [
                      matchEntryRecord EntryCCD batchSEC
                      matchEntryRecord EntryPPD batchSEC
+                     matchEntryRecord EntryWildCard batchSEC
                    ]
                    
     let ParseLines lines = syncParseLines asyncParseLinesDef lines
