@@ -147,7 +147,8 @@ type FlatRecord(rowData:string) =
         let columnDef:Column<'T> = downcast columnIdent
         let stringVal = value |> columnDef.SetValue columnIdent.Length
         let newSlice =stringVal.ToCharArray() |> Array.map string
-        Array.Copy(newSlice, 0, this.Row, start, columnIdent.Length)
+        let endSlice = start - 1 + columnIdent.Length
+        this.Row.[start..endSlice] <- newSlice
  
  
 type MaybeRecord<'T when 'T :> FlatRecord> =
