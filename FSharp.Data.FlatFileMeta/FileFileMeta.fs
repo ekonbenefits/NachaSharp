@@ -107,20 +107,20 @@ type FlatRecord(rowInput:string option) =
 module MetaDataHelper =
     let private cache = Dictionary<_, _>()
 
-    let matchRecord<'T when 'T :> FlatRecord>(constructor:string option -> 'T) value  =
+    let matchRecord(constructor:string option -> #FlatRecord) value  =
         let result =  Some(value) |> constructor
         if result.IsMatch() then
             Some(result)
         else
             None
            
-    let multiMatch<'T when 'T :> FlatRecord> value (matchers:(string -> 'T option) list)  =
+    let multiMatch (matchers:(string -> #FlatRecord option) list) value =
         matchers
             |> List.map (fun f -> f value)
             |> List.tryFind Option.isSome
             |> Option.flatten
 
-    let setup<'T>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
+    let setup<'T when 'T :> FlatRecord>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
         let k = typeof<'T>;
         if cache.ContainsKey(k) then
             cache.[k]

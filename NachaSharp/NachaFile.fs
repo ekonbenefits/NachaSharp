@@ -3,22 +3,20 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 
 module NachaFile =
     let (|FileHeaderMatch|_|)=
-        matchRecord(FileHeaderRecord) 
+        matchRecord FileHeaderRecord 
     let (|FileControlMatch|_|)=
-        matchRecord(FileControlRecord) 
+        matchRecord FileControlRecord
     let (|BatchHeaderMatch|_|) =
-        matchRecord(BatchHeaderRecord) 
+        matchRecord BatchHeaderRecord
     let (|BatchControlMatch|_|) =
-        matchRecord(BatchControlRecord) 
-       
+        matchRecord BatchControlRecord
     let matchEntryRecord constructor =
-        matchRecord (fun x-> x |> constructor :> EntryDetail)
-       
-    let (|EntryMatch|_|) value =
-        [
-            matchEntryRecord EntryExample1
-            matchEntryRecord EntryExample2 
-        ] |> multiMatch value
+        matchRecord (fun x-> constructor x :> EntryDetail)
+    let (|EntryMatch|_|) = 
+        multiMatch [
+                     matchEntryRecord EntryExample1
+                     matchEntryRecord EntryExample2 
+                   ]
 
     let Parse (lines: string seq) =
         let mutable head: FileHeaderRecord option = None
