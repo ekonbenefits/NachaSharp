@@ -18,13 +18,24 @@ module Format =
         
     module Int =
         let getReq (value:string) = value |> int
+        let getOpt (value:string) = 
+            value 
+                |> Helper.optionOfStringWhitespace
+                |> Option.map int
+                |> Option.toNullable
+         
         let setZerod length (value:int)= value |> string |> String.Full.padLeft length '0'
-
+        
+        let setOptZerod length (value: int Nullable) =
+            match value |> Option.ofNullable with
+                | Some (i) -> setZerod length i
+                | None -> Str.fillToLength length
+                  
         
     module DateAndTime =
         open System.Globalization
         let parseReq format value = DateTime.ParseExact(value, format, CultureInfo.InvariantCulture)
-        let toStringReq format (value:DateTime) = value.ToString(format, CultureInfo.InvariantCulture)     
+        let toStringReq format (_:int) (value:DateTime) = value.ToString(format, CultureInfo.InvariantCulture)     
         let parseOpt (format:string) (value:string) = 
                     match DateTime.TryParseExact(value, 
                                                  format,
@@ -35,14 +46,32 @@ module Format =
                         | _______ -> None
                     |> Option.toNullable
         
+        let getOptJulianDate value =
+            let intToJulian date =
+                let jan1 = DateTime(DateTime.Today.Year, 1, 1)
+                jan1 |> DateTime.addDays (float date)
+            value |> Int.getOpt 
+                  |> Option.ofNullable 
+                  |> Option.map intToJulian 
+                  |> Option.toNullable
+        
+        let setOptJulianDate (length:int) (value: DateTime Nullable) =
+           let optValue = Option.ofNullable value
+           match optValue with
+                          | Some(d) -> d.DayOfYear |> int |> Int.setZerod length
+                          | None -> length |> Str.fillToLength
+        
         let toStringOpt format (length:int) (value:DateTime Nullable)=
            let optValue = Option.ofNullable value
            match optValue with
-               | Some(d) -> d |> toStringReq format
+               | Some(d) -> d |> toStringReq format length
                | None -> length |> Str.fillToLength 
         
         let getYYMMDD = parseReq "yyMMdd"
-        let setYYMMDD (_:int) = toStringReq "yyMMdd"      
+        let setYYMMDD = toStringReq "yyMMdd"      
+        
+        let getOptYYMMDD = parseOpt "yyMMdd"
+        let setOptYYMMDD = toStringOpt "yyMMdd"    
         
         let getOptHHMM = parseOpt "HHmm"
         let setOptHHMM = toStringOpt "HHmm"
@@ -52,4 +81,6 @@ module Format =
     let rightPadString:FormatPairs<_> = (Str.getRightTrim, Str.setRightPad)
     let leftPadString:FormatPairs<_>  = (Str.getLeftTrim, Str.setLeftPad)
     let reqYYMMDD:FormatPairs<_>  = (DateAndTime.getYYMMDD, DateAndTime.setYYMMDD)
+    let optYYMMDD:FormatPairs<_>  = (DateAndTime.getOptYYMMDD, DateAndTime.setOptYYMMDD)
+    let optJulian:FormatPairs<_> = (DateAndTime.getOptJulianDate, DateAndTime.setOptJulianDate)
     let optHHMM:FormatPairs<_>  = (DateAndTime.getOptHHMM, DateAndTime.setOptHHMM)

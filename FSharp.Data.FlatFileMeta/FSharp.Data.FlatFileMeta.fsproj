@@ -5,6 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Helper.fs" />
     <Compile Include="Format.fs" />
     <Compile Include="FileFileMeta.fs" />
   </ItemGroup>

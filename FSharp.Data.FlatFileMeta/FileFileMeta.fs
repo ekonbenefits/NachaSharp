@@ -10,13 +10,6 @@ open System
 open FSharp.Interop.Compose.Linq
 
 
-module internal Helper =
-    let inline optionOfString str =
-                    if str |> String.IsNullOrEmpty then 
-                        None
-                    else
-                        Some(str)
-
 
 type ColumnIdentifier(key: string, length:int) =
     member __.Key = key
@@ -44,7 +37,7 @@ type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
 [<AbstractClass>]
 type FlatRecord(rowData:string) =
-    let rowInput = Helper.optionOfString rowData
+    let rowInput = Helper.optionOfStringEmpty rowData
     let mutable rawData: string array = Array.empty
     let mutable columnKeys: IList<string> = upcast List()
     let mutable columnMap: IDictionary<string, int * ColumnIdentifier> = upcast Map.empty 
