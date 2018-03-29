@@ -21,33 +21,35 @@ module rec NachaFile =
                      matchEntryRecord EntryExample2 
                    ]
                    
-    let ParseLines lines = syncParseLines AsyncParseLinesDef lines
-                   
-    let AsyncParseFile stream = asyncParseFile AsyncParseLinesDef stream |> Async.StartAsTask
+    let ParseLines lines = syncParseLines asyncParseLinesDef lines
     
-    let AsyncParseLines lines = AsyncParseLinesDef lines |> Async.StartAsTask
+    let ParseFile stream = syncParseFile asyncParseLinesDef stream
+                   
+    let AsyncParseFile stream = asyncParseFile asyncParseLinesDef stream |> Async.StartAsTask
+    
+    let AsyncParseLines lines = asyncParseLinesDef lines |> Async.StartAsTask
 
-    let internal AsyncParseLinesDef (lines: string AsyncSeq) = async {
-        let mutable head: FileHeaderRecord option = None
+    let internal asyncParseLinesDef (lines: string AsyncSeq) = async {
+        let mutable head: FileHeaderRecord MaybeRecord = NoRecord
         let enumerator = lines.GetEnumerator();
         let! current = enumerator.MoveNext()
-        while head.IsNone && current.IsSome do
-            match current.Value with
+        while isMissingRecordButHasString head current do
+            match current |> Option.get with
                 | FileHeaderMatch (fh) -> 
-                    head <- Some(fh)
+                    head <- SomeRecord(fh)
                     let! currentFH = enumerator.MoveNext()
-                    while fh.Trailer.IsNone && currentFH.IsSome do
-                        match currentFH.Value with
+                    while isMissingRecordButHasString fh.FileControl currentFH do
+                        match currentFH |> Option.get with
                             | FileControlMatch t ->
-                                fh.Trailer <- SomeRecord(t)
+                                fh.FileControl<- SomeRecord(t)
                             | BatchHeaderMatch bh ->
-                                fh.Children.Add(bh)
+                                fh.Batches.Add(bh)
                                 let! currentBH = enumerator.MoveNext()
-                                while bh.Trailer.IsNone && currentBH.IsSome do
-                                    match currentBH.Value with
-                                        | BatchControlMatch bt -> bh.Trailer <- SomeRecord(bt)
+                                while isMissingRecordButHasString bh.BatchControl currentBH do
+                                    match currentBH |> Option.get with
+                                        | BatchControlMatch bt -> bh.BatchControl <- SomeRecord(bt)
                                         | EntryMatch ed ->
-                                            bh.Children.Add(ed)
+                                            bh.Entries.Add(ed)
                                         | _ -> ()
                             | _ -> ()
                 | _ -> ()

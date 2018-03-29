@@ -68,8 +68,8 @@ type BatchHeaderRecord(rowInput) =
                          length = 94
                      })
 
-    member val Children: EntryDetail IList = upcast List() with get,set
-    member val Trailer: BatchControlRecord MaybeRecord = NoRecord with get,set
+    member val Entries: EntryDetail IList = upcast List() with get,set
+    member val BatchControl: BatchControlRecord MaybeRecord = NoRecord with get,set
 
 
 
@@ -88,8 +88,8 @@ type FileControlRecord(rowInput) =
 type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")
     
-    member val Children: BatchHeaderRecord IList = upcast List() with get,set
-    member val Trailer: FileControlRecord MaybeRecord = NoRecord with get,set
+    member val Batches: BatchHeaderRecord IList = upcast List() with get,set
+    member val FileControl: FileControlRecord MaybeRecord = NoRecord with get,set
             
     override this.Setup () = 
         setup this <|

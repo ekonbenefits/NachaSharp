@@ -122,19 +122,35 @@ type FlatRecord(rowData:string) =
         let stringVal = value |> columnDef.SetValue columnIdent.Length
         this.Row.[start..columnIdent.Length] <- stringVal.ToCharArray() |> Array.map string
  
+ 
 type MaybeRecord<'T when 'T :> FlatRecord> =
     SomeRecord of 'T | NoRecord
     
-    member this.IsSome =
-              match this with
-              | SomeRecord s -> true
-              | NoRecord -> false
+module MaybeRecord =
 
-    member this.IsNone =
-              match this with
-              | SomeRecord s -> true
-              | NoRecord -> false  
-              
+      [<CompiledName("IsSomeRecord")>]      
+      let isSomeRecord =
+           function 
+                | SomeRecord _ -> true
+                | NoRecord -> false
+
+      [<CompiledName("IsNoRecord")>]      
+      let isNoRecord =
+           function 
+                | SomeRecord _ -> false
+                | NoRecord -> true
+
+      [<CompiledName("ToOption")>]        
+      let toOption =
+            function 
+                | SomeRecord x -> Some(x)
+                | NoRecord -> None
+        
+      [<CompiledName("OfOption")>]        
+      let ofOption =
+            function 
+                | Some x -> SomeRecord(x)
+                | None -> NoRecord            
     
               
 module MetaDataHelper =   
@@ -142,10 +158,10 @@ module MetaDataHelper =
     type Cache<'T when 'T :> FlatRecord> ()=
         static member val MetaData: ParsedMeta option = Option.None with get,set
 
-    let syncParseLines (parser:string AsyncSeq -> #FlatRecord option Async) = 
+    let syncParseLines (parser:string AsyncSeq -> #FlatRecord MaybeRecord Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
-
-    let asyncParseFile (parser:string AsyncSeq -> #FlatRecord option Async) (stream:Stream) =
+            
+    let asyncParseFile (parser:string AsyncSeq -> #FlatRecord MaybeRecord Async) (stream:Stream) =
         let seq = asyncSeq{
                         use streamReader = new StreamReader(stream)
                         let mutable completed = false
@@ -160,6 +176,9 @@ module MetaDataHelper =
         async {
             return! seq |> parser
         }
+        
+    let syncParseFile parser stream = 
+         asyncParseFile parser stream |> Async.RunSynchronously
 
     let matchRecord(constructor:string -> #FlatRecord) value  =
         let result = value |> constructor       
@@ -167,11 +186,14 @@ module MetaDataHelper =
             Some(result)
         else
             None
+            
+    let isMissingRecordButHasString record data  =
+        record |> MaybeRecord.isNoRecord && data |> Option.isSome
            
     let multiMatch (matchers:(string -> #FlatRecord option) list) value =
         matchers
             |> List.map (fun f -> f value)
-            |> List.tryFind Option.isSome
+            |> List.tryFind (fun x->x.IsSome)
             |> Option.flatten
 
     let setup<'T when 'T :> FlatRecord>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
