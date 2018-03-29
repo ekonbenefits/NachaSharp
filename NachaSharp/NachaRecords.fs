@@ -21,7 +21,7 @@ type EntryAddenda(rowInput, recordTypeCode) =
 [<AbstractClass>]
 type EntryDetail(rowInput,recordTypeCode ) =
     inherit NachaRecord(rowInput, recordTypeCode)
-    member val Addenda: EntryAddenda option = Option.None with get,set
+    member val Addenda: EntryAddenda list = List.empty with get,set
     
 type EntryExample1(rowInput) =
     inherit EntryDetail(rowInput, "X")
@@ -91,7 +91,7 @@ type FileHeaderRecord(rowInput) =
         setup this <|
                 lazy ({ 
                          columns =[
-                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.constantString this.IdentifyingRecordTypeCode)
+                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.leftPadString)
                                     MetaColumn.Make(this.PriorityCode, 2, Format.zerodInt)
                                     MetaColumn.Make(this.IntermediateDestination, 10, Format.leftPadString)
                                     MetaColumn.Make(this.IntermediateOrigin, 10, Format.leftPadString)
