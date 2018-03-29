@@ -33,9 +33,11 @@ module Format =
                                                 ) with
                         | true, d -> Some(d)
                         | _______ -> None
+                    |> Option.toNullable
         
-        let toStringOpt format (length:int) (value:DateTime option)=
-           match value with
+        let toStringOpt format (length:int) (value:DateTime Nullable)=
+           let optValue = Option.ofNullable value
+           match optValue with
                | Some(d) -> d |> toStringReq format
                | None -> length |> Str.fillToLength 
         

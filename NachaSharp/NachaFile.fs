@@ -1,4 +1,5 @@
 namespace NachaSharp
+open FSharp.Data.FlatFileMeta
 open FSharp.Data.FlatFileMeta.MetaDataHelper
 open FSharp.Control
 open System.IO
@@ -38,13 +39,13 @@ module rec NachaFile =
                     while fh.Trailer.IsNone && currentFH.IsSome do
                         match currentFH.Value with
                             | FileControlMatch t ->
-                                fh.Trailer <- Some(t)
+                                fh.Trailer <- SomeRecord(t)
                             | BatchHeaderMatch bh ->
                                 fh.Children.Add(bh)
                                 let! currentBH = enumerator.MoveNext()
                                 while bh.Trailer.IsNone && currentBH.IsSome do
                                     match currentBH.Value with
-                                        | BatchControlMatch bt -> bh.Trailer <- Some(bt)
+                                        | BatchControlMatch bt -> bh.Trailer <- SomeRecord(bt)
                                         | EntryMatch ed ->
                                             bh.Children.Add(ed)
                                         | _ -> ()

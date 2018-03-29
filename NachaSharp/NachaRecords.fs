@@ -21,7 +21,7 @@ type EntryAddenda(rowInput, recordTypeCode) =
 [<AbstractClass>]
 type EntryDetail(rowInput,recordTypeCode ) =
     inherit NachaRecord(rowInput, recordTypeCode)
-    member val Addenda: IList<_> = upcast List<EntryAddenda>() with get,set
+    member val Addenda: EntryAddenda IList = upcast List() with get,set
     
     member this.AddendaRecordedIndicator
         with get () = this.GetColumn<int> ()
@@ -68,8 +68,8 @@ type BatchHeaderRecord(rowInput) =
                          length = 94
                      })
 
-    member val Children: IList<_> = upcast List<EntryDetail>() with get,set
-    member val Trailer: BatchControlRecord option = Option.None with get,set
+    member val Children: EntryDetail IList = upcast List() with get,set
+    member val Trailer: BatchControlRecord MaybeRecord = NoRecord with get,set
 
 
 
@@ -88,8 +88,8 @@ type FileControlRecord(rowInput) =
 type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")
     
-    member val Children: IList<_> = upcast List<BatchHeaderRecord>() with get,set
-    member val Trailer: FileControlRecord option = Option.None with get,set
+    member val Children: BatchHeaderRecord IList = upcast List() with get,set
+    member val Trailer: FileControlRecord MaybeRecord = NoRecord with get,set
             
     override this.Setup () = 
         setup this <|
@@ -130,7 +130,7 @@ type FileHeaderRecord(rowInput) =
              
     member this.FileCreationTime
         with get () = this.GetColumn()
-        and set value = this.SetColumn<DateTime option> value
+        and set value = this.SetColumn<DateTime Nullable> value
         
     member this.FileIDModifier
         with get () = this.GetColumn()

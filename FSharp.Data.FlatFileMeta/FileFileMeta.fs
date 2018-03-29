@@ -17,6 +17,7 @@ module internal Helper =
                     else
                         Some(str)
 
+
 type ColumnIdentifier(key: string, length:int) =
     member __.Key = key
     member __.Length = length
@@ -121,7 +122,21 @@ type FlatRecord(rowData:string) =
         let stringVal = value |> columnDef.SetValue columnIdent.Length
         this.Row.[start..columnIdent.Length] <- stringVal.ToCharArray() |> Array.map string
  
-        
+type MaybeRecord<'T when 'T :> FlatRecord> =
+    SomeRecord of 'T | NoRecord
+    
+    member this.IsSome =
+              match this with
+              | SomeRecord s -> true
+              | NoRecord -> false
+
+    member this.IsNone =
+              match this with
+              | SomeRecord s -> true
+              | NoRecord -> false  
+              
+    
+              
 module MetaDataHelper =   
     [<Extension;Sealed;AbstractClass>] 
     type Cache<'T when 'T :> FlatRecord> ()=
