@@ -2,7 +2,6 @@ namespace NachaSharp
 open FSharp.Data.FlatFileMeta
 open FSharp.Data.FlatFileMeta.MetaDataHelper
 open FSharp.Control
-open System.IO
 
 module rec NachaFile =
     let internal (|FileHeaderMatch|_|)=
@@ -13,12 +12,12 @@ module rec NachaFile =
         matchRecord BatchHeaderRecord
     let internal (|BatchControlMatch|_|) =
         matchRecord BatchControlRecord
-    let internal matchEntryRecord constructor =
-        matchRecord (fun x-> constructor x :> EntryDetail)
-    let internal (|EntryMatch|_|) = 
+    let internal matchEntryRecord constructor batchSEC =
+        matchRecord (fun x-> constructor(batchSEC, x) :> EntryDetail)
+    let internal (|EntryMatch|_|) batchSEC = 
         multiMatch [
-                     matchEntryRecord EntryExample1
-                     matchEntryRecord EntryExample2 
+                     matchEntryRecord EntryCCD batchSEC
+                     matchEntryRecord EntryPPD batchSEC
                    ]
                    
     let ParseLines lines = syncParseLines asyncParseLinesDef lines
@@ -48,7 +47,7 @@ module rec NachaFile =
                                 while isMissingRecordButHasString bh.BatchControl currentBH do
                                     match currentBH |> Option.get with
                                         | BatchControlMatch bt -> bh.BatchControl <- SomeRecord(bt)
-                                        | EntryMatch ed ->
+                                        | EntryMatch bh.StandardEntryClass ed ->
                                             bh.Entries.Add(ed)
                                         | _ -> ()
                             | _ -> ()

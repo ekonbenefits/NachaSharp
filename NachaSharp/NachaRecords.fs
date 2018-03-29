@@ -9,7 +9,12 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 type NachaRecord(rowInput, recordTypeCode) =
     inherit FlatRecord(rowInput)
     override this.IsIdentified() =
+        let blockFiller = "9"
+        let charBlockFiller = blockFiller |> Seq.head
         this.RecordTypeCode = recordTypeCode
+            && (this.RecordTypeCode <> blockFiller
+                || this.ToRawString() |> Seq.exists (fun x -> x <> charBlockFiller))
+                
     member this.RecordTypeCode
         with get () = this.GetColumn ()
         and set value = this.SetColumn<string> value
@@ -19,8 +24,10 @@ type EntryAddenda(rowInput, recordTypeCode) =
     inherit NachaRecord(rowInput, recordTypeCode)
 
 [<AbstractClass>]
-type EntryDetail(rowInput,recordTypeCode ) =
-    inherit NachaRecord(rowInput, recordTypeCode)
+type EntryDetail(entrySEC, batchSEC, rowInput) =
+    inherit NachaRecord(rowInput, "6")
+    override __.IsIdentified() =
+        base.IsIdentified() && batchSEC = entrySEC
     
     member this.Addenda 
         with get () = this.GetChild<EntryAddenda IList>(lazy upcast List())
@@ -29,8 +36,8 @@ type EntryDetail(rowInput,recordTypeCode ) =
         with get () = this.GetColumn<int> ()
         and set value = this.SetColumn<int> value
 
-type EntryExample1(rowInput) =
-    inherit EntryDetail(rowInput, "X")
+type EntryCCD(batchSEC, rowInput) =
+    inherit EntryDetail("CCD", batchSEC, rowInput)
     override this.Setup () = 
         setup this <|
                 lazy ({ 
@@ -39,8 +46,8 @@ type EntryExample1(rowInput) =
                          length = 94
                      })
                      
-type EntryExample2(rowInput) =
-    inherit EntryDetail(rowInput, "X")
+type EntryPPD(batchSEC, rowInput) =
+    inherit EntryDetail("PPD", batchSEC, rowInput)
     override this.Setup () = 
         setup this <|
                 lazy ({ 
@@ -50,7 +57,7 @@ type EntryExample2(rowInput) =
                      })
     
 type BatchControlRecord(rowInput) =
-    inherit NachaRecord(rowInput, "X")
+    inherit NachaRecord(rowInput, "8")
     override this.Setup () = 
         setup this <|
                 lazy ({ 
@@ -61,11 +68,17 @@ type BatchControlRecord(rowInput) =
 
         
 type BatchHeaderRecord(rowInput) =
-    inherit NachaRecord(rowInput, "X")
+    inherit NachaRecord(rowInput, "5")
     override this.Setup () = 
         setup this <|
                 lazy ({ 
                          columns =[
+                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.leftPadString)
+                                    MetaColumn.Make(this.ServiceClassCode, 3, Format.leftPadString)
+                                    MetaColumn.Make(this.CompanyName, 16, Format.rightPadString)
+                                    MetaColumn.Make(this.CompanyDiscretionaryData, 20, Format.rightPadString)
+                                    MetaColumn.Make(this.CompanyIdentification, 10, Format.leftPadString)
+                                    MetaColumn.Make(this.StandardEntryClass, 3, Format.leftPadString)
                                   ]
                          length = 94
                      })
@@ -75,12 +88,30 @@ type BatchHeaderRecord(rowInput) =
     member this.BatchControl 
         with get () = this.GetChild<BatchControlRecord MaybeRecord>(lazy NoRecord)
         and set value = this.SetChild<BatchControlRecord MaybeRecord>(value)
+        
+        
+    member this.ServiceClassCode
+        with get () = this.GetColumn()
+        and set value = this.SetColumn<string> value
 
+    member this.CompanyName
+        with get () = this.GetColumn()
+        and set value = this.SetColumn<string> value
 
+    member this.CompanyDiscretionaryData
+        with get () = this.GetColumn()
+        and set value = this.SetColumn<string> value
+        
+    member this.CompanyIdentification
+        with get () = this.GetColumn()
+        and set value = this.SetColumn<string> value
+        
+    member this.StandardEntryClass
+        with get () = this.GetColumn()
+        and set value = this.SetColumn<string> value
 
-    
 type FileControlRecord(rowInput) =
-    inherit NachaRecord(rowInput, "X")
+    inherit NachaRecord(rowInput, "9")
 
     override this.Setup () = 
         setup this <|
