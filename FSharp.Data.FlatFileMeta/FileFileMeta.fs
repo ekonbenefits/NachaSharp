@@ -56,6 +56,8 @@ type FlatRecord(rowData:string) =
 
     abstract Setup: unit -> ParsedMeta
     
+    abstract PostSetup: unit -> unit
+    
     member this.IsMatch() = this.DoesLengthMatch() && this.IsIdentified ()
     
     abstract IsIdentified: unit -> bool
@@ -72,7 +74,7 @@ type FlatRecord(rowData:string) =
                         | Some (row) -> row |> Array.ofSeq |> Array.map string
                         | None -> Array.init totalLength (fun _ -> " ")
             columnMap <- mapMeta
-    
+            this.PostSetup()
 
        
     member __.ChildKeys() =
@@ -101,7 +103,8 @@ type FlatRecord(rowData:string) =
     
     member this.RawData(key:string)=
         let start, columnIdent = this.ColumnMap.[key]
-        this.Row.[start..columnIdent.Length] |> String.concat ""             
+        let endSlice = start - 1 + columnIdent.Length
+        this.Row.[start..endSlice] |> String.concat ""             
             
     member this.MetaData(key:string) =
         let start, columnIdent = this.ColumnMap.[key]
@@ -130,7 +133,9 @@ type FlatRecord(rowData:string) =
             match memberName with
                 | Some(k) -> this.ColumnMap.[k]
                 | None -> invalidArg "memberName" "Compiler should automatically fill this value"
-        let data = this.Row.[start..columnIdent.Length] |> String.concat ""
+        let endSlice = start - 1 + columnIdent.Length 
+        let slice = this.Row.[start..endSlice]
+        let data = slice |> String.concat ""
         let columnDef:Column<'T> = downcast columnIdent
         data |> columnDef.GetValue 
             
@@ -141,7 +146,8 @@ type FlatRecord(rowData:string) =
                  | None -> invalidArg "memberName" "Compiler should automatically fill this value"
         let columnDef:Column<'T> = downcast columnIdent
         let stringVal = value |> columnDef.SetValue columnIdent.Length
-        this.Row.[start..columnIdent.Length] <- stringVal.ToCharArray() |> Array.map string
+        let newSlice =stringVal.ToCharArray() |> Array.map string
+        Array.Copy(newSlice, 0, this.Row, start, columnIdent.Length)
  
  
 type MaybeRecord<'T when 'T :> FlatRecord> =

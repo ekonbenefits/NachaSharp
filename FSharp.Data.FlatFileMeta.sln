@@ -4,6 +4,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Data.FlatFileMeta", 
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NachaSharp", "NachaSharp\NachaSharp.fsproj", "{29D864AC-42EB-4E99-BC60-4C61AF044CA7}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TestNachaSharp", "TestNachaSharp\TestNachaSharp.fsproj", "{55B980A1-F3BA-4C49-8A58-CDBD874038E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{29D864AC-42EB-4E99-BC60-4C61AF044CA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29D864AC-42EB-4E99-BC60-4C61AF044CA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29D864AC-42EB-4E99-BC60-4C61AF044CA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55B980A1-F3BA-4C49-8A58-CDBD874038E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55B980A1-F3BA-4C49-8A58-CDBD874038E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55B980A1-F3BA-4C49-8A58-CDBD874038E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55B980A1-F3BA-4C49-8A58-CDBD874038E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

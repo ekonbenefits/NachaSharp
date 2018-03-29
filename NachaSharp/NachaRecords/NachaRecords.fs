@@ -8,6 +8,11 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 [<AbstractClass>]
 type NachaRecord(rowInput, recordTypeCode) =
     inherit FlatRecord(rowInput)
+
+    
+    override this.PostSetup() =
+        this.RecordTypeCode <- recordTypeCode
+            
     override this.IsIdentified() =
         let blockFiller = "9"
         let charBlockFiller = blockFiller |> Seq.head
