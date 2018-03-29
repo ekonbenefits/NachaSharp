@@ -20,8 +20,18 @@ type NachaRecord(rowInput, recordTypeCode) =
         and set value = this.SetColumn<string> value
 
 [<AbstractClass>]
-type EntryAddenda(rowInput, recordTypeCode) =
-    inherit NachaRecord(rowInput, recordTypeCode)
+type EntryAddenda(rowInput) =
+    inherit NachaRecord(rowInput, "7")
+
+type EntryAddendaWildCard(rowInput) =
+    inherit EntryAddenda(rowInput)
+    override this.Setup () = 
+        setup this <|
+                lazy ({ 
+                         columns =[
+                                  ]
+                         length = 94
+                     })
 
 [<AbstractClass>]
 type EntryDetail(entrySEC, batchSEC, rowInput) =

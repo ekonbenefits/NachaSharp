@@ -2,6 +2,7 @@ namespace NachaSharp
 open FSharp.Data.FlatFileMeta
 open FSharp.Data.FlatFileMeta.MetaDataHelper
 open FSharp.Control
+open System.IO
 
 module rec NachaFile =
     let internal (|FileHeaderMatch|_|)=
@@ -20,7 +21,14 @@ module rec NachaFile =
                      matchEntryRecord EntryPPD batchSEC
                      matchEntryRecord EntryWildCard batchSEC
                    ]
-                   
+
+    let internal matchEntryAddendaRecord constructor =
+        matchRecord (fun x-> constructor(x) :> EntryAddenda)
+    let internal (|EntryAddendaMatch|_|) = 
+        multiMatch [
+                     matchEntryAddendaRecord EntryAddendaWildCard
+                   ]
+                  
     let ParseLines lines = syncParseLines asyncParseLinesDef lines
     
     let ParseFile stream = syncParseFile asyncParseLinesDef stream
@@ -50,6 +58,12 @@ module rec NachaFile =
                                         | BatchControlMatch bt -> bh.BatchControl <- SomeRecord(bt)
                                         | EntryMatch bh.StandardEntryClass ed ->
                                             bh.Entries.Add(ed)
+                                            for _ in 0..ed.AddendaRecordedIndicator do
+                                                let! currentAdd = enumerator.MoveNext()
+                                                match currentAdd |> Option.get with
+                                                | EntryAddendaMatch add ->
+                                                    ed.Addenda.Add(add)
+                                                | _ -> raise <| InvalidDataException("Incorrect Addenda Indicator")
                                         | _ -> ()
                             | _ -> ()
                 | _ -> ()
