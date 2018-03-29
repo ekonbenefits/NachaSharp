@@ -7,9 +7,8 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 [<AbstractClass>]
 type NachaRecord(rowInput, recordTypeCode) =
     inherit FlatRecord(rowInput)
-    member __.IdentifyingRecordTypeCode = recordTypeCode
     override this.IsIdentified() =
-            this.RecordTypeCode = this.IdentifyingRecordTypeCode
+            this.RecordTypeCode = recordTypeCode
     member this.RecordTypeCode
         with get () = this.GetColumn ()
         and set value = this.SetColumn<string> value
@@ -23,6 +22,10 @@ type EntryDetail(rowInput,recordTypeCode ) =
     inherit NachaRecord(rowInput, recordTypeCode)
     member val Addenda: EntryAddenda list = List.empty with get,set
     
+    member this.AddendaRecordedIndicator
+        with get () = this.GetColumn<int> ()
+        and set value = this.SetColumn<int> value
+
 type EntryExample1(rowInput) =
     inherit EntryDetail(rowInput, "X")
     override this.Setup () = 

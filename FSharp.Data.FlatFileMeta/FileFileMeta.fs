@@ -45,6 +45,8 @@ type FlatRecord(rowInput:string option) =
                      result |> init
                      result
 
+    member this.IsNew() = rowInput.IsNone
+
     abstract Setup: unit -> ParsedMeta
     
     member this.IsMatch() = this.DoesLengthMatch() && this.IsIdentified ()
@@ -64,7 +66,7 @@ type FlatRecord(rowInput:string option) =
                         | None -> Array.init totalLength (fun _ -> " ")
             columnMap <- mapMeta
     
-    member this.Keys =
+    member this.Keys() =
         this.LazySetup()
         columnKeys
             
@@ -85,6 +87,10 @@ type FlatRecord(rowInput:string option) =
     member this.RawData(key:string)=
         let start, columnIdent = this.ColumnMap |> Map.find key
         this.Row.[start..columnIdent.Length] |> String.concat ""             
+            
+    member this.MetaData(key:string) =
+        let start, columnIdent = this.ColumnMap |> Map.find key 
+        struct (start, columnIdent.Length)
             
     member this.GetColumn([<CallerMemberName>] ?memberName: string) : 'T =
         let start, columnIdent =
