@@ -109,9 +109,12 @@ type FlatRecord(rowInput:string option) =
         let columnDef:Column<'T> = downcast columnIdent
         let stringVal = value |> columnDef.SetValue columnIdent.Length
         this.Row.[start..columnIdent.Length] <- stringVal.ToCharArray() |> Array.map string
+ 
         
-module MetaDataHelper =
-    let private cache = Dictionary<_, _>()
+module MetaDataHelper =   
+    [<Extension;Sealed;AbstractClass>] 
+    type Cache<'T when 'T :> FlatRecord> ()=
+        static member val MetaData: ParsedMeta option = Option.None with get,set
 
     let matchRecord(constructor:string option -> #FlatRecord) value  =
         let result =  Some(value) |> constructor
@@ -127,23 +130,23 @@ module MetaDataHelper =
             |> Option.flatten
 
     let setup<'T when 'T :> FlatRecord>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
-        let k = typeof<'T>;
-        if cache.ContainsKey(k) then
-            cache.[k]
-        else
-            let meta = v.Force()
-            let sumLength = meta.columns |> List.sumBy (fun x->x.Length)
-            if sumLength <> meta.length then
-                raise <| InvalidDataException(sprintf "Data columns sum to %i which is not the expected value %i" sumLength meta.length)
-            try
-                let result = meta.length,
-                             meta.columns |> List.map (fun x->x.Key),
-                             meta.columns 
-                                 |> Seq.scan (fun state i -> i.Length + state) 0
-                                 |> Seq.zip meta.columns
-                                 |> Seq.map (fun (c, i) -> c.Key, (i,c))
-                                 |> Map.ofSeq
-                cache.[k] <- result
-                result      
-            with
-                | ex -> raise <| InvalidDataException("Columns must have unique names", ex)
+        match Cache<'T>.MetaData with
+            | Some(md) -> md
+            | None ->
+                let meta = v.Force()
+                let sumLength = meta.columns |> List.sumBy (fun x->x.Length)
+                if sumLength <> meta.length then
+                    raise <| InvalidDataException(sprintf "Data columns sum to %i which is not the expected value %i" sumLength meta.length)
+                try
+                    let result = meta.length,
+                                 meta.columns |> List.map (fun x->x.Key),
+                                 meta.columns 
+                                     |> Seq.scan (fun state i -> i.Length + state) 0
+                                     |> Seq.zip meta.columns
+                                     |> Seq.map (fun (c, i) -> c.Key, (i,c))
+                                     |> Map.ofSeq
+                    Cache<'T>.MetaData <- Some(result)
+                    result      
+                with
+                    | ex -> raise <| InvalidDataException("Columns must have unique names", ex)
+                    
