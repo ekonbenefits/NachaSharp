@@ -21,7 +21,9 @@ type EntryAddenda(rowInput, recordTypeCode) =
 [<AbstractClass>]
 type EntryDetail(rowInput,recordTypeCode ) =
     inherit NachaRecord(rowInput, recordTypeCode)
-    member val Addenda: EntryAddenda IList = upcast List() with get,set
+    
+    member this.Addenda 
+                with get () = this.GetChild<EntryAddenda IList>(lazy upcast List())
     
     member this.AddendaRecordedIndicator
         with get () = this.GetColumn<int> ()
@@ -68,8 +70,11 @@ type BatchHeaderRecord(rowInput) =
                          length = 94
                      })
 
-    member val Entries: EntryDetail IList = upcast List() with get,set
-    member val BatchControl: BatchControlRecord MaybeRecord = NoRecord with get,set
+    member this.Entries 
+            with get () = this.GetChild<EntryDetail IList>(lazy upcast List())
+    member this.BatchControl 
+            with get () = this.GetChild<BatchControlRecord MaybeRecord>(lazy NoRecord)
+            and set value = this.SetChild<BatchControlRecord MaybeRecord>(value)
 
 
 
@@ -88,9 +93,12 @@ type FileControlRecord(rowInput) =
 type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")
     
-    member val Batches: BatchHeaderRecord IList = upcast List() with get,set
-    member val FileControl: FileControlRecord MaybeRecord = NoRecord with get,set
-            
+    member this.Batches 
+            with get () = this.GetChild<BatchHeaderRecord IList>(lazy upcast List())
+    member this.FileControl 
+            with get () = this.GetChild<FileControlRecord MaybeRecord>(lazy NoRecord)
+            and set value = this.SetChild<FileControlRecord MaybeRecord>(value)
+        
     override this.Setup () = 
         setup this <|
                 lazy ({ 

@@ -50,6 +50,8 @@ type FlatRecord(rowData:string) =
     let mutable columnMap: IDictionary<string, int * ColumnIdentifier> = upcast Map.empty 
     let mutable columnLength: int = 0
     
+    let children = Dictionary<string,obj>()
+    
     static member Create<'T when 'T :> FlatRecord>
                     (constructor:string option -> 'T,
                      init: 'T -> unit) =
@@ -78,10 +80,18 @@ type FlatRecord(rowData:string) =
                         | None -> Array.init totalLength (fun _ -> " ")
             columnMap <- mapMeta
     
+
+       
+    member this.ChildKeys() =
+        children.Keys
+        
+    member this.ChildData(key:string):obj=
+        children.[key]
+                
+                
     member this.Keys() =
         this.LazySetup()
-        columnKeys
-            
+        columnKeys   
     member private this.Row =
         this.LazySetup()
         rawData
@@ -103,6 +113,24 @@ type FlatRecord(rowData:string) =
     member this.MetaData(key:string) =
         let start, columnIdent = this.ColumnMap.[key]
         struct (start, columnIdent.Length)
+            
+    
+    member this.GetChild<'T>(defaultValue: 'T Lazy, [<CallerMemberName>] ?memberName: string) : 'T = 
+            let key = 
+                memberName
+                   |> Option.defaultWith (invalidArg "memberName" "Compiler should automatically fill this value")
+            match children.TryGetValue(key) with
+                | true,v -> downcast v
+                | ______ -> let d = defaultValue.Force()
+                            children.Add(key, d)
+                            d
+            
+    member this.SetChild<'T>(value:'T, [<CallerMemberName>] ?memberName: string) : unit = 
+                let key = 
+                    memberName
+                       |> Option.defaultWith (invalidArg "memberName" "Compiler should automatically fill this value")
+                children.Add(key, value)
+            
             
     member this.GetColumn([<CallerMemberName>] ?memberName: string) : 'T =
         let start, columnIdent =
