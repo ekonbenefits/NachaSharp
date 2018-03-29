@@ -30,7 +30,7 @@ type ParsedMeta = int * string list * Map<string, int * ColumnIdentifier>
 type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
 [<AbstractClass>]
-type BaseFlatRecord<'BaseType>(rowInput:string option) =
+type BaseFlatRecord(rowInput:string option) =
         
     let mutable rawData: string array = Array.empty
     let mutable columnKeys: string list = List.empty
@@ -94,9 +94,16 @@ type BaseFlatRecord<'BaseType>(rowInput:string option) =
         this.Row.[start..columnIdent.Length] <- stringVal.ToCharArray() |> Array.map string
         
 module MetaDataHelper =
-    let cache = Dictionary<_, _>()
+    let private cache = Dictionary<_, _>()
 
-    let setup<'T>  (record:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
+    let matchRecord<'T when 'T :> BaseFlatRecord>(constructor:string option -> 'T) value  =
+        let result =  Some(value) |> constructor
+        if result.IsMatch() then
+            Some(result)
+        else
+            None
+
+    let setup<'T>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
         let k = typeof<'T>;
         if cache.ContainsKey(k) then
             cache.[k]

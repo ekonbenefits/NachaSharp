@@ -1,33 +1,30 @@
 namespace NachaSharp
 
-open FSharp.Data.FlatFileMeta
 open System
-open System.Runtime.InteropServices.ComTypes
+open FSharp.Data.FlatFileMeta
+open FSharp.Data.FlatFileMeta.MetaDataHelper
+
 
 [<AbstractClass>]
 type Record(rowInput) =
-    inherit BaseFlatRecord<Record>(rowInput)
+    inherit BaseFlatRecord(rowInput)
 
 [<AbstractClass>]
 type EntryAddenda(rowInput) =
     inherit Record(rowInput)
 
-[<AbstractClass>]
 type EntryDetail(rowInput) =
     inherit Record(rowInput)
     member val Trailer: EntryAddenda option = Option.None with get,set
     
-[<AbstractClass>]
 type BatchControlRecord(rowInput) =
     inherit Record(rowInput) 
         
-[<AbstractClass>]
 type BatchHeaderRecord(rowInput) =
     inherit Record(rowInput)
     member val Children: EntryDetail list = List.empty with get,set
     member val Trailer: BatchControlRecord option = Option.None with get,set
     
-[<AbstractClass>]
 type FileControlRecord(rowInput) =
     inherit Record(rowInput)
        
@@ -43,6 +40,7 @@ type FileHeaderRecord(rowInput) =
             this.RecordTypeCode = recordTypeCode 
             
     override this.Setup () = 
+        setup this <|
                 lazy ({ 
                          columns =[
                                     MetaColumn.Make(this.RecordTypeCode, 1, Format.constantString recordTypeCode)
@@ -61,7 +59,6 @@ type FileHeaderRecord(rowInput) =
                                   ]
                          length = 94
                      })
-                |> MetaDataHelper.setup this
         
     member this.RecordTypeCode
         with get () = this.GetColumn ()
@@ -116,20 +113,37 @@ type FileHeaderRecord(rowInput) =
         and set value = this.SetColumn<string> value
         
 module File =
+
+    let (|FileHeaderMatch|_|)=
+        matchRecord(FileHeaderRecord) 
+    let (|FileControlMatch|_|)=
+        matchRecord(FileControlRecord) 
+    let (|BatchHeaderMatch|_|) =
+        matchRecord(BatchHeaderRecord) 
+    let (|BatchControlMatch|_|) =
+        matchRecord(BatchControlRecord) 
+    let (|EntryDetailMatch|_|) =
+        matchRecord(EntryDetail) 
+
     let Parse (lines: string seq) =
-        let recordType 
-    
-        let processLine (state: FileHeaderRecord Option) item =
-            match state with
-               | None -> let record = FileHeaderRecord(Some(item))
-                         if (not <| record.IsIdentified()) then
-                             raise <| Exception("Parse Error")
-                         record
-               | Some (x) -> 
-                         []
-               
-               
-                         x
-                            
-        
-        lines |> Seq.fold processLine None
+        let mutable head: FileHeaderRecord option = None
+        let enumerator = lines.GetEnumerator();
+        while head |> Option.isNone && enumerator.MoveNext() do
+            match enumerator.Current with
+                | FileHeaderMatch (fh) -> 
+                    head <- Some(fh)
+                    while fh.Trailer |> Option.isNone && enumerator.MoveNext() do
+                        match enumerator.Current with
+                            | FileControlMatch t ->
+                                fh.Trailer <- Some(t)
+                            | BatchHeaderMatch bh ->
+                                fh.Children <- fh.Children @ [bh]
+                                while bh.Trailer |> Option.isNone && enumerator.MoveNext() do
+                                    match enumerator.Current with
+                                        | BatchControlMatch  bt -> bh.Trailer <- Some(bt)
+                                        | EntryDetailMatch ed ->
+                                            bh.Children <- bh.Children @ [ed]
+                                        | _ -> ()
+                            | _ -> ()
+                | _ -> ()
+        head
