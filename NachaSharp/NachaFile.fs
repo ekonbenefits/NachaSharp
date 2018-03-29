@@ -40,13 +40,13 @@ module rec NachaFile =
                             | FileControlMatch t ->
                                 fh.Trailer <- Some(t)
                             | BatchHeaderMatch bh ->
-                                fh.Children <- fh.Children @ [bh]
+                                fh.Children.Add(bh)
                                 let! currentBH = enumerator.MoveNext()
                                 while bh.Trailer.IsNone && currentBH.IsSome do
                                     match currentBH.Value with
                                         | BatchControlMatch bt -> bh.Trailer <- Some(bt)
                                         | EntryMatch ed ->
-                                            bh.Children <- bh.Children @ [ed]
+                                            bh.Children.Add(ed)
                                         | _ -> ()
                             | _ -> ()
                 | _ -> ()

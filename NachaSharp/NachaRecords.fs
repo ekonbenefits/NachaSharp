@@ -1,6 +1,7 @@
 namespace NachaSharp
 
 open System
+open System.Collections.Generic
 open FSharp.Data.FlatFileMeta
 open FSharp.Data.FlatFileMeta.MetaDataHelper
 
@@ -20,7 +21,7 @@ type EntryAddenda(rowInput, recordTypeCode) =
 [<AbstractClass>]
 type EntryDetail(rowInput,recordTypeCode ) =
     inherit NachaRecord(rowInput, recordTypeCode)
-    member val Addenda: EntryAddenda list = List.empty with get,set
+    member val Addenda: IList<_> = upcast List<EntryAddenda>() with get,set
     
     member this.AddendaRecordedIndicator
         with get () = this.GetColumn<int> ()
@@ -67,7 +68,7 @@ type BatchHeaderRecord(rowInput) =
                          length = 94
                      })
 
-    member val Children: EntryDetail list = List.empty with get,set
+    member val Children: IList<_> = upcast List<EntryDetail>() with get,set
     member val Trailer: BatchControlRecord option = Option.None with get,set
 
 
@@ -87,7 +88,7 @@ type FileControlRecord(rowInput) =
 type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")
     
-    member val Children: BatchHeaderRecord list = List.empty with get,set
+    member val Children: IList<_> = upcast List<BatchHeaderRecord>() with get,set
     member val Trailer: FileControlRecord option = Option.None with get,set
             
     override this.Setup () = 

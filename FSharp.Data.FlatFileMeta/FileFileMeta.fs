@@ -7,7 +7,15 @@ open System.Runtime.CompilerServices
 open System.Collections.Generic
 open System.IO
 open System
+open FSharp.Interop.Compose.Linq
 
+
+module internal Helper =
+    let inline optionOfString str =
+                    if str |> String.IsNullOrEmpty then 
+                        None
+                    else
+                        Some(str)
 
 type ColumnIdentifier(key: string, length:int) =
     member __.Key = key
@@ -28,15 +36,17 @@ type MetaColumn =
             | ________________________________ -> invalidArg "value" "Must be a property get"
         Column(key, length, getValue, setValue)
 
-type ParsedMeta = int * string list * Map<string, int * ColumnIdentifier>
+type ParsedMeta = int * string IList * IDictionary<string, int * ColumnIdentifier>
 
 type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
+
 [<AbstractClass>]
-type FlatRecord(rowInput:string option) =
+type FlatRecord(rowData:string) =
+    let rowInput = Helper.optionOfString rowData
     let mutable rawData: string array = Array.empty
-    let mutable columnKeys: string list = List.empty
-    let mutable columnMap: Map<string, int * ColumnIdentifier> = Map.empty
+    let mutable columnKeys: IList<string> = upcast List()
+    let mutable columnMap: IDictionary<string, int * ColumnIdentifier> = upcast Map.empty 
     let mutable columnLength: int = 0
     
     static member Create<'T when 'T :> FlatRecord>
@@ -57,7 +67,7 @@ type FlatRecord(rowInput:string option) =
     member this.DoesLengthMatch () = this.Row |> Array.length = columnLength
 
     member private this.LazySetup() =
-        if columnMap |> Map.isEmpty then
+        if columnMap.Count = 0 then
             let totalLength, orderedKeys, mapMeta = this.Setup()
       
             columnLength <- totalLength
@@ -86,17 +96,17 @@ type FlatRecord(rowInput:string option) =
         this.Row |> String.concat ""
     
     member this.RawData(key:string)=
-        let start, columnIdent = this.ColumnMap |> Map.find key
+        let start, columnIdent = this.ColumnMap.[key]
         this.Row.[start..columnIdent.Length] |> String.concat ""             
             
     member this.MetaData(key:string) =
-        let start, columnIdent = this.ColumnMap |> Map.find key 
+        let start, columnIdent = this.ColumnMap.[key]
         struct (start, columnIdent.Length)
             
     member this.GetColumn([<CallerMemberName>] ?memberName: string) : 'T =
         let start, columnIdent =
             match memberName with
-                | Some(k) -> this.ColumnMap |> Map.find k 
+                | Some(k) -> this.ColumnMap.[k]
                 | None -> invalidArg "memberName" "Compiler should automatically fill this value"
         let data = this.Row.[start..columnIdent.Length] |> String.concat ""
         let columnDef:Column<'T> = downcast columnIdent
@@ -105,7 +115,7 @@ type FlatRecord(rowInput:string option) =
     member this.SetColumn<'T>(value:'T, [<CallerMemberName>] ?memberName: string) =
         let start, columnIdent =
             match memberName with
-                 | Some(key) -> this.ColumnMap |> Map.find key 
+                 | Some(k) -> this.ColumnMap.[k]
                  | None -> invalidArg "memberName" "Compiler should automatically fill this value"
         let columnDef:Column<'T> = downcast columnIdent
         let stringVal = value |> columnDef.SetValue columnIdent.Length
@@ -136,9 +146,9 @@ module MetaDataHelper =
             return! seq |> parser
         }
 
-    let matchRecord(constructor:string option -> #FlatRecord) value  =
-        let result =  Some(value) |> constructor
-        if result.IsMatch() then
+    let matchRecord(constructor:string -> #FlatRecord) value  =
+        let result = value |> constructor       
+        if result.IsMatch() && not <| result.IsNew() then
             Some(result)
         else
             None
@@ -159,12 +169,13 @@ module MetaDataHelper =
                     raise <| InvalidDataException(sprintf "Data columns sum to %i which is not the expected value %i" sumLength meta.length)
                 try
                     let result = meta.length,
-                                 meta.columns |> List.map (fun x->x.Key),
+                                 meta.columns |> Seq.map (fun x->x.Key) |> Enumerable.toList :> IList<_>,
                                  meta.columns 
                                      |> Seq.scan (fun state i -> i.Length + state) 0
                                      |> Seq.zip meta.columns
                                      |> Seq.map (fun (c, i) -> c.Key, (i,c))
                                      |> Map.ofSeq
+                                     :> IDictionary<_,_>
                     Cache<'T>.MetaData <- Some(result)
                     result      
                 with
