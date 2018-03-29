@@ -7,13 +7,13 @@ open System.IO
 
 
 type ColumnIdentifier(key: string, length:int) =
-    member this.Key = key
-    member this.Length = length
+    member __.Key = key
+    member __.Length = length
     
 type Column<'T>(key: string, length:int, getValue: string -> 'T, setValue: int -> 'T -> string) =
     inherit ColumnIdentifier(key, length)
-    member this.GetValue = getValue
-    member this.SetValue = setValue
+    member __.GetValue = getValue
+    member __.SetValue = setValue
 
 
 type MetaColumn =
@@ -30,7 +30,7 @@ type ParsedMeta = int * string list * Map<string, int * ColumnIdentifier>
 type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
 [<AbstractClass>]
-type BaseFlatRecord(rowInput:string option) =
+type FlatRecord(rowInput:string option) =
         
     let mutable rawData: string array = Array.empty
     let mutable columnKeys: string list = List.empty
@@ -54,7 +54,7 @@ type BaseFlatRecord(rowInput:string option) =
             rawData <- match rowInput with
                         | Some (row) -> row |> Array.ofSeq |> Array.map string
                         | None -> Array.init totalLength (fun _ -> " ")
-            columnMap <- columnMap
+            columnMap <- mapMeta
     
     member this.Keys =
         this.LazySetup()
@@ -96,7 +96,7 @@ type BaseFlatRecord(rowInput:string option) =
 module MetaDataHelper =
     let private cache = Dictionary<_, _>()
 
-    let matchRecord<'T when 'T :> BaseFlatRecord>(constructor:string option -> 'T) value  =
+    let matchRecord<'T when 'T :> FlatRecord>(constructor:string option -> 'T) value  =
         let result =  Some(value) |> constructor
         if result.IsMatch() then
             Some(result)

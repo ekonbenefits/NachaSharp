@@ -5,32 +5,29 @@ open FSharp.Data.FlatFileMeta
 open FSharp.Data.FlatFileMeta.MetaDataHelper
 
 
-[<AbstractClass>]
-type Record(rowInput) =
-    inherit BaseFlatRecord(rowInput)
 
 [<AbstractClass>]
 type EntryAddenda(rowInput) =
-    inherit Record(rowInput)
+    inherit FlatRecord(rowInput)
 
 type EntryDetail(rowInput) =
-    inherit Record(rowInput)
+    inherit FlatRecord(rowInput)
     member val Trailer: EntryAddenda option = Option.None with get,set
     
 type BatchControlRecord(rowInput) =
-    inherit Record(rowInput) 
+    inherit FlatRecord(rowInput) 
         
 type BatchHeaderRecord(rowInput) =
-    inherit Record(rowInput)
+    inherit FlatRecord(rowInput)
     member val Children: EntryDetail list = List.empty with get,set
     member val Trailer: BatchControlRecord option = Option.None with get,set
     
 type FileControlRecord(rowInput) =
-    inherit Record(rowInput)
+    inherit FlatRecord(rowInput)
        
 type FileHeaderRecord(rowInput) =
-    inherit Record(rowInput)
-    
+    inherit FlatRecord(rowInput)
+
     let recordTypeCode = "1"
     
     member val Children: BatchHeaderRecord list = List.empty with get,set
