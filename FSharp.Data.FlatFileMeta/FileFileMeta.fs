@@ -1,9 +1,11 @@
 namespace FSharp.Data.FlatFileMeta
+
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open System.Runtime.CompilerServices
 open System.Collections.Generic
 open System.IO
+open System
 
 
 type ColumnIdentifier(key: string, length:int) =
@@ -111,6 +113,12 @@ module MetaDataHelper =
             Some(result)
         else
             None
+           
+    let multiMatch<'T when 'T :> FlatRecord> value (matchers:(string -> 'T option) list)  =
+        matchers
+            |> List.map (fun f -> f value)
+            |> List.tryFind Option.isSome
+            |> Option.flatten
 
     let setup<'T>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
         let k = typeof<'T>;

@@ -10,8 +10,15 @@ module NachaFile =
         matchRecord(BatchHeaderRecord) 
     let (|BatchControlMatch|_|) =
         matchRecord(BatchControlRecord) 
-    let (|EntryDetailMatch|_|) =
-        matchRecord(EntryDetail) 
+       
+    let matchEntryRecord constructor =
+        matchRecord (fun x-> x |> constructor :> EntryDetail)
+       
+    let (|EntryMatch|_|) value =
+        [
+            matchEntryRecord EntryExample1
+            matchEntryRecord EntryExample2 
+        ] |> multiMatch value
 
     let Parse (lines: string seq) =
         let mutable head: FileHeaderRecord option = None
@@ -28,8 +35,8 @@ module NachaFile =
                                 fh.Children <- fh.Children @ [bh]
                                 while bh.Trailer.IsNone && enumerator.MoveNext() do
                                     match enumerator.Current with
-                                        | BatchControlMatch  bt -> bh.Trailer <- Some(bt)
-                                        | EntryDetailMatch ed ->
+                                        | BatchControlMatch bt -> bh.Trailer <- Some(bt)
+                                        | EntryMatch ed ->
                                             bh.Children <- bh.Children @ [ed]
                                         | _ -> ()
                             | _ -> ()

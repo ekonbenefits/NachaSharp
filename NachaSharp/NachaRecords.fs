@@ -13,9 +13,18 @@ type NachaRecord(rowInput, recordTypeCode) =
     member this.RecordTypeCode
         with get () = this.GetColumn ()
         and set value = this.SetColumn<string> value
-  
-type EntryAddenda(rowInput) =
-    inherit NachaRecord(rowInput, "X")
+
+[<AbstractClass>]
+type EntryAddenda(rowInput, recordTypeCode) =
+    inherit NachaRecord(rowInput, recordTypeCode)
+
+[<AbstractClass>]
+type EntryDetail(rowInput,recordTypeCode ) =
+    inherit NachaRecord(rowInput, recordTypeCode)
+    member val Addenda: EntryAddenda option = Option.None with get,set
+    
+type EntryExample1(rowInput) =
+    inherit EntryDetail(rowInput, "X")
     override this.Setup () = 
         setup this <|
                 lazy ({ 
@@ -23,10 +32,9 @@ type EntryAddenda(rowInput) =
                                   ]
                          length = 94
                      })
-
-type EntryDetail(rowInput) =
-    inherit NachaRecord(rowInput, "X")
-    member val Addenda: EntryAddenda option = Option.None with get,set
+                     
+type EntryExample2(rowInput) =
+    inherit EntryDetail(rowInput, "X")
     override this.Setup () = 
         setup this <|
                 lazy ({ 
