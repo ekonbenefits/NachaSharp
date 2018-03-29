@@ -83,12 +83,12 @@ type BatchHeaderRecord(rowInput) =
         setup this <|
                 lazy ({ 
                          columns =[
-                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.leftPadString)
-                                    MetaColumn.Make(this.ServiceClassCode, 3, Format.leftPadString)
-                                    MetaColumn.Make(this.CompanyName, 16, Format.rightPadString)
-                                    MetaColumn.Make(this.CompanyDiscretionaryData, 20, Format.rightPadString)
-                                    MetaColumn.Make(this.CompanyIdentification, 10, Format.leftPadString)
-                                    MetaColumn.Make(this.StandardEntryClass, 3, Format.leftPadString)
+                                    MetaColumn.Make( 1, this.RecordTypeCode,     Format.leftPadString)
+                                    MetaColumn.Make( 3, this.ServiceClassCode,   Format.leftPadString)
+                                    MetaColumn.Make(16, this.CompanyName,        Format.rightPadString)
+                                    MetaColumn.Make(20, this.CompanyDiscretionaryData, Format.rightPadString)
+                                    MetaColumn.Make(10, this.CompanyIdentification, Format.leftPadString)
+                                    MetaColumn.Make( 3, this.StandardEntryClass, Format.leftPadString)
                                   ]
                          length = 94
                      })
@@ -144,19 +144,19 @@ type FileHeaderRecord(rowInput) =
         setup this <|
                 lazy ({ 
                          columns =[
-                                    MetaColumn.Make(this.RecordTypeCode, 1, Format.leftPadString)
-                                    MetaColumn.Make(this.PriorityCode, 2, Format.zerodInt)
-                                    MetaColumn.Make(this.IntermediateDestination, 10, Format.leftPadString)
-                                    MetaColumn.Make(this.IntermediateOrigin, 10, Format.leftPadString)
-                                    MetaColumn.Make(this.FileCreationDate, 6, Format.reqYYMMDD)
-                                    MetaColumn.Make(this.FileCreationTime, 4, Format.optHHMM)
-                                    MetaColumn.Make(this.FileIDModifier, 1, Format.rightPadString)
-                                    MetaColumn.Make(this.RecordSize, 3, Format.zerodInt)
-                                    MetaColumn.Make(this.BlockingFactor, 2, Format.zerodInt)
-                                    MetaColumn.Make(this.FormatCode, 1, Format.leftPadString)
-                                    MetaColumn.Make(this.IntermediateDestinationName,23, Format.rightPadString)
-                                    MetaColumn.Make(this.IntermediateOriginName,23, Format.rightPadString)
-                                    MetaColumn.Make(this.ReferenceCode, 8, Format.rightPadString)
+                                    MetaColumn.Make( 1, this.RecordTypeCode,     Format.leftPadString)
+                                    MetaColumn.Make( 2, this.PriorityCode,       Format.zerodInt)
+                                    MetaColumn.Make(10, this.IntermediateDestination, Format.leftPadString)
+                                    MetaColumn.Make(10, this.IntermediateOrigin, Format.leftPadString)
+                                    MetaColumn.Make( 6, this.FileCreationDate,   Format.reqYYMMDD)
+                                    MetaColumn.Make( 4, this.FileCreationTime,   Format.optHHMM)
+                                    MetaColumn.Make( 1, this.FileIDModifier,     Format.rightPadString)
+                                    MetaColumn.Make( 3, this.RecordSize,         Format.zerodInt)
+                                    MetaColumn.Make( 2, this.BlockingFactor,     Format.zerodInt)
+                                    MetaColumn.Make( 1, this.FormatCode,         Format.leftPadString)
+                                    MetaColumn.Make(23, this.IntermediateDestinationName, Format.rightPadString)
+                                    MetaColumn.Make(23, this.IntermediateOriginName, Format.rightPadString)
+                                    MetaColumn.Make( 8, this.ReferenceCode,      Format.rightPadString)
                                   ]
                          length = 94
                      })

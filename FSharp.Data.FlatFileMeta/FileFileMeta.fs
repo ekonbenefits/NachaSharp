@@ -29,7 +29,7 @@ type Column<'T>(key: string, length:int, getValue: string -> 'T, setValue: int -
 
 
 type MetaColumn =
-    static member Make<'T>([<ReflectedDefinition>] value:Expr<'T> , length, (getValue: string -> 'T, setValue)) =
+    static member Make<'T>(length, [<ReflectedDefinition>] value:Expr<'T> , (getValue: string -> 'T, setValue)) =
         
         let key = 
             match value with
@@ -59,7 +59,7 @@ type FlatRecord(rowData:string) =
                      result |> init
                      result
 
-    member this.IsNew() = rowInput.IsNone
+    member __.IsNew() = rowInput.IsNone
 
     abstract Setup: unit -> ParsedMeta
     
@@ -82,10 +82,10 @@ type FlatRecord(rowData:string) =
     
 
        
-    member this.ChildKeys() =
+    member __.ChildKeys() =
         children.Keys
         
-    member this.ChildData(key:string):obj=
+    member __.ChildData(key:string):obj=
         children.[key]
                 
                 
@@ -115,7 +115,7 @@ type FlatRecord(rowData:string) =
         struct (start, columnIdent.Length)
             
     
-    member this.GetChild<'T>(defaultValue: 'T Lazy, [<CallerMemberName>] ?memberName: string) : 'T = 
+    member __.GetChild<'T>(defaultValue: 'T Lazy, [<CallerMemberName>] ?memberName: string) : 'T = 
             let key = 
                 memberName
                    |> Option.defaultWith (invalidArg "memberName" "Compiler should automatically fill this value")
@@ -125,7 +125,7 @@ type FlatRecord(rowData:string) =
                             children.Add(key, d)
                             d
             
-    member this.SetChild<'T>(value:'T, [<CallerMemberName>] ?memberName: string) : unit = 
+    member __.SetChild<'T>(value:'T, [<CallerMemberName>] ?memberName: string) : unit = 
                 let key = 
                     memberName
                        |> Option.defaultWith (invalidArg "memberName" "Compiler should automatically fill this value")
