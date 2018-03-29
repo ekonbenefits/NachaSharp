@@ -59,12 +59,12 @@ module rec NachaFile =
                                         | Match.BatchControl bt -> bh.BatchControl <- SomeRecord(bt)
                                         | Match.EntryDetail bh.StandardEntryClass ed ->
                                             bh.Entries.Add(ed)
-                                            for _ in 0..ed.AddendaRecordedIndicator do
+                                            for i = 1 to ed.AddendaRecordedIndicator do
                                                 let! currentAdd = enumerator.MoveNext()
                                                 match currentAdd |> Option.get with
                                                 | Match.EntryAddenda add ->
                                                     ed.Addenda.Add(add)
-                                                | _ -> raise <| InvalidDataException("Incorrect Addenda Indicator")
+                                                | _ -> raise <| InvalidDataException(sprintf "Incorrect Addenda Indicator, misshing %ith" i)
                                         | _ -> ()
                             | _ -> ()
                 | _ -> ()
