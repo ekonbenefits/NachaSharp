@@ -2,6 +2,7 @@ namespace FSharp.Data.FlatFileMeta
 
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
+open FSharp.Control
 open System.Runtime.CompilerServices
 open System.Collections.Generic
 open System.IO
@@ -115,6 +116,25 @@ module MetaDataHelper =
     [<Extension;Sealed;AbstractClass>] 
     type Cache<'T when 'T :> FlatRecord> ()=
         static member val MetaData: ParsedMeta option = Option.None with get,set
+
+    let syncParseLines (parser:string AsyncSeq -> #FlatRecord option Async) = 
+            AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
+
+    let asyncParseFile (parser:string AsyncSeq -> #FlatRecord option Async) (stream:Stream) =
+        let seq = asyncSeq{
+                        use streamReader = new StreamReader(stream)
+                        let mutable completed = false
+                        while not (completed) do 
+                            let! line = streamReader.ReadLineAsync() |> Async.AwaitTask
+                            let found = line |> Option.ofObj
+                            match found with
+                                | Some(line) ->
+                                    yield line
+                                | None -> ()
+                  }
+        async {
+            return! seq |> parser
+        }
 
     let matchRecord(constructor:string option -> #FlatRecord) value  =
         let result =  Some(value) |> constructor
