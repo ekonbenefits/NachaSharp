@@ -9,14 +9,18 @@ type NachaRecord(rowInput, recordTypeCode) =
 
     
     override this.PostSetup() =
-        this.RecordTypeCode <- recordTypeCode
+        if this.IsNew() then
+           this.RecordTypeCode <- recordTypeCode
             
     override this.IsIdentified() =
         let blockFiller = "9"
         let charBlockFiller = blockFiller |> Seq.head
-        this.RecordTypeCode = recordTypeCode
-            && (this.RecordTypeCode <> blockFiller
-                || this.ToRawString() |> Seq.exists (fun x -> x <> charBlockFiller))
+        let matchesType = this.RecordTypeCode = recordTypeCode
+        let notPossibleToBeFiller = this.RecordTypeCode <> blockFiller
+        let verifyIsNotFiller = lazy (this.ToRawString() |> Seq.exists (fun x -> x <> charBlockFiller))
+        
+        matchesType
+            && (notPossibleToBeFiller || verifyIsNotFiller.Force())
                 
     member this.RecordTypeCode
         with get () = this.GetColumn ()

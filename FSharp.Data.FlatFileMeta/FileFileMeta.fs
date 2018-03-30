@@ -55,7 +55,9 @@ type FlatRecord(rowData:string) =
                      let result = None |> constructor
                      result |> init
                      result
-
+    
+    member val ParsedLineNumber: int option = None with get,set
+                     
     member __.IsNew() = rowInput.IsNone
 
     abstract Setup: unit -> ParsedMeta
@@ -141,7 +143,16 @@ type FlatRecord(rowData:string) =
         let slice = this.Row.[start..endSlice]
         let data = slice |> String.concat ""
         let columnDef:Column<'T> = downcast columnIdent
-        data |> columnDef.GetValue 
+        try 
+            data |> columnDef.GetValue 
+        with
+            exn -> 
+                    match this.ParsedLineNumber with
+                        | Some(ln) -> 
+                            raise <| InvalidDataException(sprintf "Unexpected value '%s' for '%s' at record %i %s" 
+                                                                data columnIdent.Key ln (this.GetType().Name), exn)
+                        | None ->
+                            raise <| InvalidDataException(sprintf "Unexpected value '%s' for '%s'" data columnIdent.Key , exn)
             
     member this.SetColumn<'T>(value:'T, [<CallerMemberName>] ?memberName: string) =
         let start, columnIdent =
@@ -212,9 +223,10 @@ module MetaDataHelper =
     let syncParseFile parser stream = 
          asyncParseFile parser stream |> Async.RunSynchronously
 
-    let matchRecord(constructor:string -> #FlatRecord) value  =
+    let matchRecord (constructor:string -> #FlatRecord) lineNumber value  =
         let result = value |> constructor       
         if result.IsMatch() && not <| result.IsNew() then
+            result.ParsedLineNumber <- Some(lineNumber)
             Some(result)
         else
             None
@@ -222,9 +234,9 @@ module MetaDataHelper =
     let isMissingRecordButHasString record data  =
         record |> MaybeRecord.isNoRecord && data |> Option.isSome
            
-    let multiMatch (matchers:(string -> #FlatRecord option) list) value =
+    let multiMatch (matchers:(int -> string -> #FlatRecord option) list) lineNo value =
         matchers
-            |> List.map (fun f -> f value)
+            |> List.map (fun f -> f lineNo value)
             |> List.tryFind (fun x->x.IsSome)
             |> Option.flatten
 

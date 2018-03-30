@@ -20,10 +20,10 @@ module rec NachaFile =
             multiMatch [
                          matchEntryRecord EntryCCD batchSEC
                          matchEntryRecord EntryPPD batchSEC
-                         matchEntryRecord EntryWildCard batchSEC
+                         matchEntryRecord EntryWildCard batchSEC 
                        ]
     
-        let matchEntryAddendaRecord constructor =
+        let matchEntryAddendaRecord constructor  =
             matchRecord (fun x-> constructor(x) :> EntryAddenda)
         let (|EntryAddenda|_|) = 
             multiMatch [
@@ -43,48 +43,59 @@ module rec NachaFile =
         let parseFromHead (head:FileHeaderRecord MaybeRecord,
                            batch:BatchHeaderRecord MaybeRecord,
                            entry:EntryDetail MaybeRecord,
-                           count:int) line =
-            let errorState = (NoRecord, NoRecord, NoRecord, -1)
+                           count:int,
+                           lineNo:int) line =
+                           
+            let next = lineNo + 1
+            let errored = (NoRecord, NoRecord, NoRecord, -1, lineNo)
+            let finished = (head, batch, entry, count, lineNo)
+            let foundFileHeader fh = (SomeRecord(fh), NoRecord, NoRecord, 0, next)
+            let foundBatchHeader fh bh = (SomeRecord(fh), SomeRecord(bh), NoRecord, 0, next)
+            let foundFileControl fh = (SomeRecord(fh), NoRecord, NoRecord, -1, lineNo)
+            let foundEntryDetail fh bh (ed:EntryDetail)= (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), ed.AddendaRecordedIndicator, next)
+            let foundBatchControl fh = (SomeRecord(fh), NoRecord, NoRecord, 0, next)
+            let foundEntryAddenda fh bh ed count = (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), count - 1, next)
+           
             match (head, batch, entry, count) with
-                | _, _, _, -1 -> (head, batch, entry, count) //Finished
+                | _, _, _, -1 -> finished
                 | NoRecord, _, _, _ ->
                      match line with
-                         | Match.FileHeader (fh) -> (SomeRecord(fh), NoRecord, NoRecord, 0)
-                         | _ ->  errorState
+                         | Match.FileHeader lineNo (fh) -> 
+                            foundFileHeader fh
+                         | _ ->  
+                            errored
                 | SomeRecord(fh), NoRecord, _, _ ->
                      match line with
-                         | Match.BatchHeader bh ->
-                             fh.Batches.Add(bh)
-                             (SomeRecord(fh), SomeRecord(bh), NoRecord, 0)
-                         | Match.FileControl fc ->
-                             fh.FileControl<- SomeRecord(fc)
-                             (head, NoRecord, NoRecord, -1)
-                         | _ ->  errorState
-                | SomeRecord(fh), SomeRecord(bh), NoRecord, _ ->
+                         | Match.FileControl lineNo fc ->
+                            fh.FileControl<- SomeRecord(fc)
+                            foundFileControl fh                     
+                         | Match.BatchHeader lineNo bh ->
+                            fh.Batches.Add(bh)
+                            foundBatchHeader fh bh
+                         | _ ->  
+                            errored
+                | SomeRecord(fh), SomeRecord(bh), _, 0 ->
                      match line with
-                         | Match.EntryDetail bh.StandardEntryClass ed ->
-                             bh.Entries.Add(ed)
-                             (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), ed.AddendaRecordedIndicator)
-                         | _ -> errorState
-                | SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), 0 ->
-                     match line with
-                         | Match.EntryDetail bh.StandardEntryClass ed ->
-                            bh.Entries.Add(ed)
-                            (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), ed.AddendaRecordedIndicator)
-                         | Match.BatchControl bc -> 
+                         | Match.BatchControl lineNo bc -> 
                             bh.BatchControl <- SomeRecord(bc)
-                            (SomeRecord(fh), NoRecord, NoRecord, 0)
-                         | _ -> errorState
+                            foundBatchControl fh
+                         | Match.EntryDetail bh.StandardEntryClass lineNo ed ->
+                                                     bh.Entries.Add(ed)
+                                                     foundEntryDetail fh bh ed 
+                         | _ ->
+                            errored
                 | SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), count ->
                      match line with
-                         | Match.EntryAddenda add ->
+                         | Match.EntryAddenda lineNo add ->
                             ed.Addenda.Add(add)
-                            (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), count - 1)
-                         | _ -> errorState
+                            foundEntryAddenda fh bh ed count
+                         | _ -> 
+                            errored
+                | _ -> errored
 
         async{
-            let! head,_,_,_ = 
-                lines |> AsyncSeq.fold parseFromHead (NoRecord, NoRecord, NoRecord, 0)
+            let! head,_,_,_,ln = 
+                lines |> AsyncSeq.fold parseFromHead (NoRecord, NoRecord, NoRecord, 0, 1)
             return head
         }
         

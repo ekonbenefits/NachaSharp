@@ -1,4 +1,4 @@
-module Tests
+module SmokeTests
 
 open FSharp.Data.FlatFileMeta
 open NachaSharp
@@ -45,10 +45,3 @@ let ``Create Blank EntryCCD`` () =
 let ``Create Blank EntryAddenaWildCard`` () =
     let control =  EntryAddendaWildCard(null)
     control.RecordTypeCode |> should equal "7"
-
-[<Fact>]
-let ``Read Random File`` () =
-    let path = Path.Combine(__SOURCE_DIRECTORY__,"Data", "web-debit.ach.txt")
-    use stream = File.OpenRead(path)
-    let header = NachaFile.ParseFile(stream)
-    header |> MaybeRecord.isSomeRecord |> should equal true
