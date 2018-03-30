@@ -26,7 +26,7 @@ type EntryWildCard(batchSEC, rowInput) =
                                     MetaColumn.Make(1, this.RecordTypeCode, Format.leftPadString)
                                     MetaColumn.PlaceHolder(78)
                                     MetaColumn.Make(1, this.AddendaRecordedIndicator, Format.zerodInt)
-                                    MetaColumn.PlaceHolder(15)
+                                    MetaColumn.PlaceHolder(14)
                                   ]
                          length = 94
                      })

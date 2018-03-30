@@ -22,8 +22,8 @@ type BatchHeaderRecord(rowInput) =
                                     MetaColumn.Make( 6, this.EffectiveEntryDate, Format.reqYYMMDD)
                                     MetaColumn.Make( 3, this.SettlementDate, Format.optJulian)
                                     MetaColumn.Make( 1, this.OriginatorStatusCode, Format.leftPadString)
-                                    MetaColumn.Make( 1, this.OriginatingDfiIndentifications, Format.leftPadString)
-                                    MetaColumn.Make( 1, this.BatchNumber, Format.zerodInt)
+                                    MetaColumn.Make( 8, this.OriginatingDfiIndentifications, Format.leftPadString)
+                                    MetaColumn.Make( 7, this.BatchNumber, Format.zerodInt)
                                   ]
                          length = 94
                      })
