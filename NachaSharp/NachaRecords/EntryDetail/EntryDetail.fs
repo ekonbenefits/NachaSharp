@@ -33,6 +33,10 @@ type EntryWildCard(batchSEC, rowInput) =
 
 type EntryCCD(batchSEC, rowInput) =
     inherit EntryDetail("CCD", batchSEC, rowInput)
+    
+     static member Create() =
+                MetaDataHelper.createRecord (fun x->EntryCCD("CCD", x)) ignore
+    
     override this.Setup () = 
         setup this <|
                 lazy ({ 
