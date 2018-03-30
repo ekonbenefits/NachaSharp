@@ -1,7 +1,6 @@
 module Tests
 
 open NachaSharp
-open System
 open Xunit
 open FsUnit.Xunit
 
