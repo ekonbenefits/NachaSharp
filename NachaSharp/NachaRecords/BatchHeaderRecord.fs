@@ -7,6 +7,14 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 
 type BatchHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "5")
+    
+     static member Create() =
+        MetaDataHelper.createRecord BatchHeaderRecord 
+            (fun bh ->
+                
+                ()
+            )
+    
     override this.Setup () = 
         setup this <|
                 lazy ({ 
@@ -29,10 +37,10 @@ type BatchHeaderRecord(rowInput) =
                      })
 
     member this.Entries 
-        with get () = this.GetChild<EntryDetail IList>(lazy upcast List())
+        with get () = this.GetChildList<EntryDetail>()
     member this.BatchControl 
-        with get () = this.GetChild<BatchControlRecord MaybeRecord>(lazy NoRecord)
-        and set value = this.SetChild<BatchControlRecord MaybeRecord>(value)
+        with get () = this.GetChild<BatchControlRecord>(lazy NoRecord)
+        and set value = this.SetChild<BatchControlRecord>(value)
         
         
     member this.ServiceClassCode

@@ -7,12 +7,20 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 
 type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")
+     
+    static member Create() =
+            MetaDataHelper.createRecord FileHeaderRecord 
+                (fun fh ->
+                    //fh.Batches.Add(BatchHeaderRecord.Create())
+                    fh.FileControl <- SomeRecord(FileControlRecord.Create())
+                    ()
+                )
     
     member this.Batches 
-        with get () = this.GetChild<BatchHeaderRecord IList>(lazy upcast List())
+        with get () = this.GetChildList<BatchHeaderRecord>()
     member this.FileControl 
-        with get () = this.GetChild<FileControlRecord MaybeRecord>(lazy NoRecord)
-        and set value = this.SetChild<FileControlRecord MaybeRecord>(value)
+        with get () = this.GetChild<FileControlRecord>(lazy NoRecord)
+        and set value = this.SetChild<FileControlRecord>(value)
         
     override this.Setup () = 
         setup this <|

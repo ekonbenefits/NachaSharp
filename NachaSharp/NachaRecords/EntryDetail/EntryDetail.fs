@@ -11,7 +11,7 @@ type EntryDetail(entrySEC, batchSEC, rowInput) =
         base.IsIdentified() && batchSEC = entrySEC
     
     member this.Addenda 
-        with get () = this.GetChild<EntryAddenda IList>(lazy upcast List())
+        with get () = this.GetChildList<EntryAddenda>()
     
     member this.AddendaRecordedIndicator
         with get () = this.GetColumn<int> ()

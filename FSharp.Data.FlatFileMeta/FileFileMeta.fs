@@ -1,4 +1,4 @@
-namespace FSharp.Data.FlatFileMeta
+namespace rec FSharp.Data.FlatFileMeta
 
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
@@ -39,8 +39,19 @@ type ParsedMeta = int * string IList * IDictionary<string, int * ColumnIdentifie
 type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
 
+type internal ChildList<'T when 'T :> FlatRecord>(parent:FlatRecord) =
+    inherit System.Collections.ObjectModel.Collection<'T>()
+    override this.InsertItem(index, item) =
+        item.Parent <- SomeRecord(parent)
+        base.InsertItem(index, item)
+    override this.SetItem(index, item) =
+        item.Parent <- SomeRecord(parent)
+        base.SetItem(index, item)
+        
 [<AbstractClass>]
 type FlatRecord(rowData:string) =
+    
+
     let rowInput = Helper.optionOfStringEmpty rowData
     let mutable rawData: string array = Array.empty
     let mutable columnKeys: IList<string> = upcast List()
@@ -49,12 +60,7 @@ type FlatRecord(rowData:string) =
     
     let children = Dictionary<string,obj>()
     
-    static member Create<'T when 'T :> FlatRecord>
-                    (constructor:string option -> 'T,
-                     init: 'T -> unit) =
-                     let result = None |> constructor
-                     result |> init
-                     result
+    member val Parent: FlatRecord MaybeRecord = NoRecord with get,set
     
     member val ParsedLineNumber: int option = None with get,set
                      
@@ -116,21 +122,32 @@ type FlatRecord(rowData:string) =
         let start, columnIdent = this.ColumnMap.[key]
         struct (start, columnIdent.Length)
             
-    
-    member __.GetChild<'T>(defaultValue: 'T Lazy, [<CallerMemberName>] ?memberName: string) : 'T = 
+
+    member private __.HelperGetChild (defaultValue:'T Lazy) (key:string) =
+                match children.TryGetValue(key) with
+                    | true,v -> downcast v
+                    | ______ -> let d = defaultValue.Force()
+                                children.Add(key, d)
+                                d
+    member this.GetChild(defaultValue:#FlatRecord MaybeRecord Lazy, [<CallerMemberName>] ?memberName: string) : #FlatRecord MaybeRecord= 
             let key = 
                 memberName
                    |> Option.defaultWith Helper.raiseMissingCompilerMemberName
-            match children.TryGetValue(key) with
-                | true,v -> downcast v
-                | ______ -> let d = defaultValue.Force()
-                            children.Add(key, d)
-                            d
+            this.HelperGetChild defaultValue key
             
-    member __.SetChild<'T>(value:'T, [<CallerMemberName>] ?memberName: string) : unit = 
+    member this.GetChildList([<CallerMemberName>] ?memberName: string) : #FlatRecord IList = 
                 let key = 
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
+                this.HelperGetChild(lazy upcast ChildList(this)) key   
+                                   
+    member this.SetChild(value:#FlatRecord MaybeRecord, [<CallerMemberName>] ?memberName: string) : unit = 
+                let key = 
+                    memberName
+                       |> Option.defaultWith Helper.raiseMissingCompilerMemberName
+                value
+                    |> MaybeRecord.toOption
+                    |> Option.iter (fun (x:#FlatRecord) -> x.Parent <- SomeRecord(this))
                 children.Add(key, value)
             
             
@@ -200,6 +217,12 @@ module MetaDataHelper =
     [<Extension;Sealed;AbstractClass>] 
     type Cache<'T when 'T :> FlatRecord> ()=
         static member val MetaData: ParsedMeta option = Option.None with get,set
+
+
+    let createRecord<'T when 'T :> FlatRecord> (constructor:string -> 'T) (init:'T -> unit) =
+                            let record = null |> constructor
+                            record |> init
+                            record
 
     let syncParseLines (parser:string AsyncSeq -> #FlatRecord MaybeRecord Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously

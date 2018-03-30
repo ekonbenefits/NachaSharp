@@ -7,8 +7,15 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 
 type FileControlRecord(rowInput) =
     inherit NachaRecord(rowInput, "9")
-
-     override this.Setup () = 
+    
+    static member Create() =
+        MetaDataHelper.createRecord FileControlRecord 
+            (fun fc ->
+                
+                ()
+            )
+    
+    override this.Setup () = 
         setup this <|
                 lazy ({ 
                          columns =[
