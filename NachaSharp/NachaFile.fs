@@ -38,35 +38,55 @@ module rec NachaFile =
     
     let AsyncParseLines lines = asyncParseLinesDef lines |> Async.StartAsTask
 
-    let internal asyncParseLinesDef (lines: string AsyncSeq) = async {
-        let mutable head: FileHeaderRecord MaybeRecord = NoRecord
-        let enumerator = lines.GetEnumerator();
-        let! current = enumerator.MoveNext()
-        while isMissingRecordButHasString head current do
-            match current |> Option.get with
-                | Match.FileHeader (fh) -> 
-                    head <- SomeRecord(fh)
-                    let! currentFH = enumerator.MoveNext()
-                    while isMissingRecordButHasString fh.FileControl currentFH do
-                        match currentFH |> Option.get with
-                            | Match.FileControl t ->
-                                fh.FileControl<- SomeRecord(t)
-                            | Match.BatchHeader bh ->
-                                fh.Batches.Add(bh)
-                                let! currentBH = enumerator.MoveNext()
-                                while isMissingRecordButHasString bh.BatchControl currentBH do
-                                    match currentBH |> Option.get with
-                                        | Match.BatchControl bt -> bh.BatchControl <- SomeRecord(bt)
-                                        | Match.EntryDetail bh.StandardEntryClass ed ->
-                                            bh.Entries.Add(ed)
-                                            for i = 1 to ed.AddendaRecordedIndicator do
-                                                let! currentAdd = enumerator.MoveNext()
-                                                match currentAdd |> Option.get with
-                                                | Match.EntryAddenda add ->
-                                                    ed.Addenda.Add(add)
-                                                | _ -> raise <| InvalidDataException(sprintf "Incorrect Addenda Indicator, misshing %ith" i)
-                                        | _ -> ()
-                            | _ -> ()
-                | _ -> ()
-        return head
-    }
+    let internal asyncParseLinesDef (lines: string AsyncSeq) = 
+
+        let parseFromHead (head:FileHeaderRecord MaybeRecord,
+                           batch:BatchHeaderRecord MaybeRecord,
+                           entry:EntryDetail MaybeRecord,
+                           count:int) line =
+            let errorState = (NoRecord, NoRecord, NoRecord, -1)
+            match (head, batch, entry, count) with
+                | _, _, _, -1 -> (head, batch, entry, count) //Finished
+                | NoRecord, _, _, _ ->
+                     match line with
+                         | Match.FileHeader (fh) -> (SomeRecord(fh), NoRecord, NoRecord, 0)
+                         | _ ->  errorState
+                | SomeRecord(fh), NoRecord, _, _ ->
+                     match line with
+                         | Match.BatchHeader bh ->
+                             fh.Batches.Add(bh)
+                             (SomeRecord(fh), SomeRecord(bh), NoRecord, 0)
+                         | Match.FileControl fc ->
+                             fh.FileControl<- SomeRecord(fc)
+                             (head, NoRecord, NoRecord, -1)
+                         | _ ->  errorState
+                | SomeRecord(fh), SomeRecord(bh), NoRecord, _ ->
+                     match line with
+                         | Match.EntryDetail bh.StandardEntryClass ed ->
+                             bh.Entries.Add(ed)
+                             (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), ed.AddendaRecordedIndicator)
+                         | _ -> errorState
+                | SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), 0 ->
+                     match line with
+                         | Match.EntryDetail bh.StandardEntryClass ed ->
+                            bh.Entries.Add(ed)
+                            (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), ed.AddendaRecordedIndicator)
+                         | Match.BatchControl bc -> 
+                            bh.BatchControl <- SomeRecord(bc)
+                            (SomeRecord(fh), NoRecord, NoRecord, 0)
+                         | _ -> errorState
+                | SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), count ->
+                     match line with
+                         | Match.EntryAddenda add ->
+                            ed.Addenda.Add(add)
+                            (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), count - 1)
+                         | _ -> errorState
+
+        async{
+            let! head,_,_,_ = 
+                lines |> AsyncSeq.fold parseFromHead (NoRecord, NoRecord, NoRecord, 0)
+            return head
+        }
+        
+      
+    
