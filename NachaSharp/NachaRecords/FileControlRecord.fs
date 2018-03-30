@@ -9,11 +9,7 @@ type FileControlRecord(rowInput) =
     inherit NachaRecord(rowInput, "9")
     
     static member Create() =
-        MetaDataHelper.createRecord FileControlRecord 
-            (fun fc ->
-                
-                ()
-            )
+        MetaDataHelper.createRecord FileControlRecord ignore
     
     override this.Setup () = 
         setup this <|

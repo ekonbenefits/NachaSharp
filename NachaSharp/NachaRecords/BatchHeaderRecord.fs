@@ -11,7 +11,7 @@ type BatchHeaderRecord(rowInput) =
      static member Create() =
         MetaDataHelper.createRecord BatchHeaderRecord 
             (fun bh ->
-                
+                bh.BatchControl <- SomeRecord(BatchControlRecord.Create())
                 ()
             )
     

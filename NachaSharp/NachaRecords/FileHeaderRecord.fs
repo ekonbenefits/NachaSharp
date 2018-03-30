@@ -11,7 +11,6 @@ type FileHeaderRecord(rowInput) =
     static member Create() =
             MetaDataHelper.createRecord FileHeaderRecord 
                 (fun fh ->
-                    //fh.Batches.Add(BatchHeaderRecord.Create())
                     fh.FileControl <- SomeRecord(FileControlRecord.Create())
                     ()
                 )
