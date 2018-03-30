@@ -11,12 +11,13 @@ open FSharp.Interop.Compose.Linq
 
 
 
-type ColumnIdentifier(key: string, length:int) =
+type ColumnIdentifier(key: string, length:int, placeHolder:bool) =
     member __.Key = key
     member __.Length = length
+    member __.PlaceHolder = placeHolder
     
 type Column<'T>(key: string, length:int, getValue: string -> 'T, setValue: int -> 'T -> string) =
-    inherit ColumnIdentifier(key, length)
+    inherit ColumnIdentifier(key, length, false)
     member __.GetValue = getValue
     member __.SetValue = setValue
 
@@ -29,6 +30,9 @@ type MetaColumn =
             | PropertyGet(_, propOrValInfo, _) -> propOrValInfo.Name
             | ________________________________ -> invalidArg "value" "Must be a property get"
         Column(key, length, getValue, setValue)
+
+    static member PlaceHolder(length) =
+        ColumnIdentifier("", length, true)
 
 type ParsedMeta = int * string IList * IDictionary<string, int * ColumnIdentifier>
 
@@ -234,10 +238,15 @@ module MetaDataHelper =
                     raise <| InvalidDataException(sprintf "Data columns sum to %i which is not the expected value %i" sumLength meta.length)
                 try
                     let result = meta.length,
-                                 meta.columns |> Seq.map (fun x->x.Key) |> Enumerable.toList :> IList<_>,
+                                 meta.columns 
+                                    |> Seq.filter (fun x->not x.PlaceHolder) 
+                                    |> Seq.map (fun x->x.Key)
+                                    |> Enumerable.toList
+                                    :> IList<_>,
                                  meta.columns 
                                      |> Seq.scan (fun state i -> i.Length + state) 0
                                      |> Seq.zip meta.columns
+                                     |> Seq.filter (fun (c, _) ->  not c.PlaceHolder)
                                      |> Seq.map (fun (c, i) -> c.Key, (i,c))
                                      |> Map.ofSeq
                                      :> IDictionary<_,_>

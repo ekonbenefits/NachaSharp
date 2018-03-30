@@ -1,6 +1,7 @@
 namespace FSharp.Data.FlatFileMeta
 open System
 open FSharp.Interop.Compose.System
+open System
 
 module Format =
 
@@ -24,14 +25,31 @@ module Format =
                 |> Option.map int
                 |> Option.toNullable
          
-        let setZerod length (value:int)= value |> string |> String.Full.padLeft length '0'
+        let setZerod length (value:int) =
+            value 
+                |> string 
+                |> String.Full.padLeft length '0'
+                |> String.Full.substring 0 length
         
         let setOptZerod length (value: int Nullable) =
             match value |> Option.ofNullable with
                 | Some (i) -> setZerod length i
-                | None -> Str.fillToLength length
-                  
+                | None -> Str.fillToLength length 
+
+    module Decimal =
+        let toStringReq (decimalPlaces:int) (length:int) (value:decimal) =
+            value * decimal(10.0 ** float(decimalPlaces))
+                |> truncate 
+                |> int 
+                |> Int.setZerod length
         
+        let parseReq (decimalPlaces:int) value =
+            let intVal = Int.getReq value
+            decimal(intVal) / decimal(10.0 ** float(decimalPlaces))
+
+        let getReqMoney = parseReq 2
+        let setReqMoney = toStringReq 2
+
     module DateAndTime =
         open System.Globalization
         let parseReq format value = DateTime.ParseExact(value, format, CultureInfo.InvariantCulture)
@@ -78,6 +96,8 @@ module Format =
         
         
     let zerodInt:FormatPairs<_>  = (Int.getReq, Int.setZerod)
+
+    let reqMoney:FormatPairs<_> = (Decimal.getReqMoney, Decimal.setReqMoney)
     let rightPadString:FormatPairs<_> = (Str.getRightTrim, Str.setRightPad)
     let leftPadString:FormatPairs<_>  = (Str.getLeftTrim, Str.setLeftPad)
     let reqYYMMDD:FormatPairs<_>  = (DateAndTime.getYYMMDD, DateAndTime.setYYMMDD)
