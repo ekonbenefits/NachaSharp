@@ -8,5 +8,4 @@ At https://github.com/moov-io/ach/blob/master/testdata
 
 Found 
  * 20110729A.ach.txt
- * 20110805A.ach.txt
  * web-debit.ach.txt

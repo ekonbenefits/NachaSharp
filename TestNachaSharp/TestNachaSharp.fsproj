@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\20110729A.ach.txt" />
-    <Content Include="Data\20110805A.ach.txt" />
     <Content Include="Data\ReadMe.txt" />
     <Content Include="Data\transactions1.ach.txt" />
     <Content Include="Data\transactions2.ach.txt" />
