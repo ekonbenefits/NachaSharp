@@ -36,4 +36,4 @@ let ``Check Batch Count`` () =
                 |> (fun x->x.BatchControl 
                         |> function | SomeRecord(y) -> y.Entry_AddendaCount 
                                     | NoRecord -> 0)
-                |> should equal true
+                |> should equal 1

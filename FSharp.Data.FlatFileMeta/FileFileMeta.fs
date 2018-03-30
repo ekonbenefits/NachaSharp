@@ -62,6 +62,13 @@ type FlatRecord(rowData:string) =
     
     member val Parent: FlatRecord MaybeRecord = NoRecord with get,set
     
+    member this.Root:FlatRecord MaybeRecord = 
+            let rec findRoot (f:FlatRecord MaybeRecord) =
+                match f with 
+                    | NoRecord -> f
+                    | SomeRecord(p) -> findRoot p.Parent
+            findRoot this.Parent
+    
     member val ParsedLineNumber: int option = None with get,set
                      
     member __.IsNew() = rowInput.IsNone
@@ -69,6 +76,20 @@ type FlatRecord(rowData:string) =
     abstract Setup: unit -> ParsedMeta
     
     abstract PostSetup: unit -> unit
+    
+    abstract Calculate: unit -> unit
+    
+    default this.Calculate () = 
+        children.Values
+            |> Seq.iter (function | :? FlatRecord as f -> f.Calculate()
+                                  | :? System.Collections.IEnumerable as l -> 
+                                        l |> Enumerable.ofType<FlatRecord>
+                                          |> Seq.iter (fun i->i.Calculate())
+                                  | _ ->())
+                                  
+    member this.Changed() =
+        this.Root |> function | SomeRecord(r) -> r.Changed() 
+                              | NoRecord -> this.Calculate()
     
     member this.IsMatch() = this.DoesLengthMatch() && this.IsIdentified ()
     

@@ -14,7 +14,7 @@ type BatchHeaderRecord(rowInput) =
                 bh.BatchControl <- SomeRecord(BatchControlRecord.Create())
                 ()
             )
-    
+            
     override this.Setup () = 
         setup this <|
                 lazy ({ 
@@ -38,10 +38,20 @@ type BatchHeaderRecord(rowInput) =
 
     member this.Entries 
         with get () = this.GetChildList<EntryDetail>()
+        
     member this.BatchControl 
         with get () = this.GetChild<BatchControlRecord>(lazy NoRecord)
         and set value = this.SetChild<BatchControlRecord>(value)
         
+    override this.Calculate () =
+                 base.Calculate()
+                 match this.BatchControl with
+                    | SomeRecord(bc) -> 
+                        let c = this.Entries |> Seq.sumBy (fun x->x.Addenda.Count + 1)
+                        bc.Entry_AddendaCount <- c
+                    | _ -> ()
+                 ()
+    
         
     member this.ServiceClassCode
         with get () = this.GetColumn()
@@ -89,4 +99,6 @@ type BatchHeaderRecord(rowInput) =
         
     member this.BatchNumber
         with get () = this.GetColumn()
-        and set value = this.SetColumn<int> value   
+        and set value = this.SetColumn<int> value 
+        
+        

@@ -21,6 +21,14 @@ type FileHeaderRecord(rowInput) =
         with get () = this.GetChild<FileControlRecord>(lazy NoRecord)
         and set value = this.SetChild<FileControlRecord>(value)
         
+    override this.Calculate () =
+         base.Calculate()
+         match this.FileControl with
+            | SomeRecord(fc) -> 
+                fc.BatchCount <- this.Batches.Count
+            | _ -> ()
+         ()
+        
     override this.Setup () = 
         setup this <|
                 lazy ({ 
