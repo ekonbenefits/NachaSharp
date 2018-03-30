@@ -118,7 +118,7 @@ type FlatRecord(rowData:string) =
     member __.GetChild<'T>(defaultValue: 'T Lazy, [<CallerMemberName>] ?memberName: string) : 'T = 
             let key = 
                 memberName
-                   |> Option.defaultWith (Helper.raiseMissingCompilerMemberName())
+                   |> Option.defaultWith Helper.raiseMissingCompilerMemberName
             match children.TryGetValue(key) with
                 | true,v -> downcast v
                 | ______ -> let d = defaultValue.Force()
@@ -128,7 +128,7 @@ type FlatRecord(rowData:string) =
     member __.SetChild<'T>(value:'T, [<CallerMemberName>] ?memberName: string) : unit = 
                 let key = 
                     memberName
-                       |> Option.defaultWith (Helper.raiseMissingCompilerMemberName())
+                       |> Option.defaultWith Helper.raiseMissingCompilerMemberName
                 children.Add(key, value)
             
             

@@ -24,9 +24,9 @@ type EntryWildCard(batchSEC, rowInput) =
                 lazy ({ 
                          columns =[
                                     MetaColumn.Make(1, this.RecordTypeCode, Format.leftPadString)
-                                    MetaColumn.PlaceHolder(78)
+                                    MetaColumn.PlaceHolder(77)
                                     MetaColumn.Make(1, this.AddendaRecordedIndicator, Format.zerodInt)
-                                    MetaColumn.PlaceHolder(14)
+                                    MetaColumn.PlaceHolder(15)
                                   ]
                          length = 94
                      })
