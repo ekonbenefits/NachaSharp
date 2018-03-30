@@ -50,11 +50,11 @@ module rec NachaFile =
             let errored = (NoRecord, NoRecord, NoRecord, -1, lineNo)
             let finished = (head, batch, entry, addendaStatus, lineNo)
             let foundFileHeader fh = (SomeRecord(fh), NoRecord, NoRecord, 0, next)
-            let foundBatchHeader fh bh = (SomeRecord(fh), SomeRecord(bh), NoRecord, 0, next)
-            let foundFileControl fh = (SomeRecord(fh), NoRecord, NoRecord, -1, lineNo)
-            let foundEntryDetail fh bh (ed:EntryDetail)= (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), ed.AddendaRecordedIndicator, next)
-            let foundBatchControl fh = (SomeRecord(fh), NoRecord, NoRecord, 0, next)
-            let foundEntryAddenda fh bh ed = (SomeRecord(fh), SomeRecord(bh), SomeRecord(ed), 2, next)
+            let foundBatchHeader bh = (head, SomeRecord(bh), NoRecord, 0, next)
+            let foundFileControl () = (head, NoRecord, NoRecord, -1, lineNo)
+            let foundEntryDetail (ed:EntryDetail) = (head, batch, SomeRecord(ed), ed.AddendaRecordedIndicator, next)
+            let foundBatchControl () = (head, NoRecord, NoRecord, 0, next)
+            let foundEntryAddenda () = (head, batch, entry, 2, next)
            
             match (head, batch, addendaStatus) with
                 | _, _, -1 -> finished
@@ -68,23 +68,23 @@ module rec NachaFile =
                      match line with
                          | Match.FileControl lineNo fc ->
                             fh.FileControl<- SomeRecord(fc)
-                            foundFileControl fh                     
+                            foundFileControl ()                     
                          | Match.BatchHeader lineNo bh ->
                             fh.Batches.Add(bh)
-                            foundBatchHeader fh bh
+                            foundBatchHeader bh
                          | _ ->  
                             errored
                 | SomeRecord(fh), SomeRecord(bh), _ ->
                      match entry,addendaStatus,line with
                          | _,_,Match.BatchControl lineNo bc -> 
                              bh.BatchControl <- SomeRecord(bc)
-                             foundBatchControl fh
+                             foundBatchControl ()
                          | _,i,Match.EntryDetail bh.StandardEntryClass lineNo ed when i <> 1 ->
                              bh.Entries.Add(ed)
-                             foundEntryDetail fh bh ed
+                             foundEntryDetail ed
                          | SomeRecord(ed),i,Match.EntryAddenda lineNo add when i > 0 ->
                              ed.Addenda.Add(add)
-                             foundEntryAddenda fh bh ed
+                             foundEntryAddenda ()
                          | _ ->
                             errored
 
