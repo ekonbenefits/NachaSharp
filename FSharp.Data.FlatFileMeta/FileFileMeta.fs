@@ -44,11 +44,13 @@ type internal ChildList<'T when 'T :> FlatRecord>(parent:FlatRecord) =
     override this.InsertItem(index, item) =
         item.Parent <- SomeRecord(parent)
         base.InsertItem(index, item)
-        item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
+        if item.HelperGetAllowMutation () then
+            item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
     override this.SetItem(index, item) =
         item.Parent <- SomeRecord(parent)
         base.SetItem(index, item)
-        item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
+        if item.HelperGetAllowMutation () then
+            item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
         
 [<AbstractClass>]
 type FlatRecord(rowData:string) =
@@ -72,6 +74,8 @@ type FlatRecord(rowData:string) =
             findRoot this.Parent
     
     member val ParsedLineNumber: int option = None with get,set
+    
+    member val AllowMutation: bool = rowInput.IsNone with get,set
                      
     member __.IsNew() = rowInput.IsNone
 
@@ -82,16 +86,17 @@ type FlatRecord(rowData:string) =
     abstract Calculate: unit -> unit
     
     default this.Calculate () =
-        if this.IsNew() then  
-            children.Values
-                |> Seq.iter (function | :? FlatRecord as f -> f.Calculate()
-                                      | :? System.Collections.IEnumerable as l -> 
-                                            l |> Enumerable.ofType<FlatRecord>
-                                              |> Seq.iter (fun i->i.Calculate())
-                                      | _ ->())
+        if not <| this.HelperGetAllowMutation ()  then
+            invalidOp "AllowMutation is not set on root"
+            
+        children.Values
+            |> Seq.iter (function | :? FlatRecord as f -> f.Calculate()
+                                  | :? System.Collections.IEnumerable as l -> 
+                                        l |> Enumerable.ofType<FlatRecord>
+                                          |> Seq.iter (fun i->i.Calculate())
+                                  | _ ->())
                                       
     member this.Changed() =
-        if this.IsNew() then  
             this.Root |> function | SomeRecord(r) -> r.Changed() 
                                   | NoRecord -> this.Calculate()
     
@@ -146,7 +151,12 @@ type FlatRecord(rowData:string) =
     member this.MetaData(key:string) =
         let start, columnIdent = this.ColumnMap.[key]
         struct (start, columnIdent.Length)
-            
+          
+    member internal this.HelperGetAllowMutation () =
+        this.Root 
+            |> MaybeRecord.toOption
+            |> Option.map (fun x -> x.AllowMutation)
+            |> Option.defaultValue this.AllowMutation
 
     member private __.HelperGetChild (defaultValue:'T Lazy) (key:string) =
                 match children.TryGetValue(key) with
@@ -171,7 +181,8 @@ type FlatRecord(rowData:string) =
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
                 children.Add(key, value)
-                this.Changed()
+                if this.HelperGetAllowMutation () then
+                    this.Changed()
             
             
     member this.GetColumn([<CallerMemberName>] ?memberName: string) : 'T =
@@ -199,8 +210,8 @@ type FlatRecord(rowData:string) =
             match memberName with
                  | Some(k) -> this.ColumnMap.[k]
                  | None -> Helper.raiseMissingCompilerMemberName()
-        if not <| this.IsNew() then
-            invalidOp "Can only modify new records"
+        if not <| this.HelperGetAllowMutation ()  then
+            invalidOp "AllowMutation is not set on root"
                  
         let columnDef:Column<'T> = downcast columnIdent
         let stringVal = value |> columnDef.SetValue columnIdent.Length
