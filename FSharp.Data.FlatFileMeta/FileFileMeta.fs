@@ -44,9 +44,11 @@ type internal ChildList<'T when 'T :> FlatRecord>(parent:FlatRecord) =
     override this.InsertItem(index, item) =
         item.Parent <- SomeRecord(parent)
         base.InsertItem(index, item)
+        item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
     override this.SetItem(index, item) =
         item.Parent <- SomeRecord(parent)
         base.SetItem(index, item)
+        item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
         
 [<AbstractClass>]
 type FlatRecord(rowData:string) =
@@ -79,17 +81,19 @@ type FlatRecord(rowData:string) =
     
     abstract Calculate: unit -> unit
     
-    default this.Calculate () = 
-        children.Values
-            |> Seq.iter (function | :? FlatRecord as f -> f.Calculate()
-                                  | :? System.Collections.IEnumerable as l -> 
-                                        l |> Enumerable.ofType<FlatRecord>
-                                          |> Seq.iter (fun i->i.Calculate())
-                                  | _ ->())
-                                  
+    default this.Calculate () =
+        if this.IsNew() then  
+            children.Values
+                |> Seq.iter (function | :? FlatRecord as f -> f.Calculate()
+                                      | :? System.Collections.IEnumerable as l -> 
+                                            l |> Enumerable.ofType<FlatRecord>
+                                              |> Seq.iter (fun i->i.Calculate())
+                                      | _ ->())
+                                      
     member this.Changed() =
-        this.Root |> function | SomeRecord(r) -> r.Changed() 
-                              | NoRecord -> this.Calculate()
+        if this.IsNew() then  
+            this.Root |> function | SomeRecord(r) -> r.Changed() 
+                                  | NoRecord -> this.Calculate()
     
     member this.IsMatch() = this.DoesLengthMatch() && this.IsIdentified ()
     
@@ -166,10 +170,8 @@ type FlatRecord(rowData:string) =
                 let key = 
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
-                value
-                    |> MaybeRecord.toOption
-                    |> Option.iter (fun (x:#FlatRecord) -> x.Parent <- SomeRecord(this))
                 children.Add(key, value)
+                this.Changed()
             
             
     member this.GetColumn([<CallerMemberName>] ?memberName: string) : 'T =
@@ -197,11 +199,15 @@ type FlatRecord(rowData:string) =
             match memberName with
                  | Some(k) -> this.ColumnMap.[k]
                  | None -> Helper.raiseMissingCompilerMemberName()
+        if not <| this.IsNew() then
+            invalidOp "Can only modify new records"
+                 
         let columnDef:Column<'T> = downcast columnIdent
         let stringVal = value |> columnDef.SetValue columnIdent.Length
         let newSlice =stringVal.ToCharArray() |> Array.map string
         let endSlice = start - 1 + columnIdent.Length
         this.Row.[start..endSlice] <- newSlice
+        this.Changed()
  
  
 type MaybeRecord<'T when 'T :> FlatRecord> =
@@ -221,19 +227,19 @@ module MaybeRecord =
                 | SomeRecord _ -> false
                 | NoRecord -> true
 
+
       [<CompiledName("ToOption")>]        
-      let toOption =
-            function 
+      let toOption<'T when 'T :> FlatRecord> (maybeRec: MaybeRecord<'T>) : Option<'T> =
+            match maybeRec with 
                 | SomeRecord x -> Some(x)
                 | NoRecord -> None
         
       [<CompiledName("OfOption")>]        
-      let ofOption =
-            function 
+      let ofOption (opt:#FlatRecord option) =
+            match opt with  
                 | Some x -> SomeRecord(x)
-                | None -> NoRecord            
-    
-              
+                | None -> NoRecord       
+                  
 module MetaDataHelper =   
     [<Extension;Sealed;AbstractClass>] 
     type Cache<'T when 'T :> FlatRecord> ()=
