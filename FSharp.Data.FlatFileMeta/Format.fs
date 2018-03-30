@@ -1,7 +1,6 @@
 namespace FSharp.Data.FlatFileMeta
 open System
 open FSharp.Interop.Compose.System
-open System
 
 module Format =
 
