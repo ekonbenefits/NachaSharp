@@ -15,6 +15,8 @@ type EntryAddendaWildCard(rowInput) =
         setup this <|
                 lazy ({ 
                          columns =[
+                                    MetaColumn.Make(1, this.RecordTypeCode, Format.leftPadString)
+                                    MetaColumn.PlaceHolder(93)
                                   ]
                          length = 94
                      })

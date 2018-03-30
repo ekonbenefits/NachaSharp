@@ -24,6 +24,10 @@ type EntryWildCard(batchSEC, rowInput) =
         setup this <|
                 lazy ({ 
                          columns =[
+                                    MetaColumn.Make(1, this.RecordTypeCode, Format.leftPadString)
+                                    MetaColumn.PlaceHolder(78)
+                                    MetaColumn.Make(1, this.AddendaRecordedIndicator, Format.zerodInt)
+                                    MetaColumn.PlaceHolder(15)
                                   ]
                          length = 94
                      })
