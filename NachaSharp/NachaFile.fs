@@ -5,31 +5,7 @@ open FSharp.Control
 open System.IO
 
 module rec NachaFile =
-    module internal Match =
-        let (|FileHeader|_|)=
-            matchRecord FileHeaderRecord 
-        let (|FileControl|_|)=
-            matchRecord FileControlRecord
-        let (|BatchHeader|_|) =
-            matchRecord BatchHeaderRecord
-        let (|BatchControl|_|) =
-            matchRecord BatchControlRecord
-        let matchEntryRecord constructor batchSEC =
-            matchRecord (fun x-> constructor(batchSEC, x) :> EntryDetail)
-        let (|EntryDetail|_|) batchSEC = 
-            multiMatch [
-                         matchEntryRecord EntryCCD batchSEC
-                         matchEntryRecord EntryPPD batchSEC
-                         matchEntryRecord EntryWildCard batchSEC 
-                       ]
-    
-        let matchEntryAddendaRecord constructor  =
-            matchRecord (fun x-> constructor(x) :> EntryAddenda)
-        let (|EntryAddenda|_|) = 
-            multiMatch [
-                         matchEntryAddendaRecord EntryAddendaWildCard
-                       ]
-                  
+
     let ParseLines lines = syncParseLines asyncParseLinesDef lines
     
     let ParseFile stream = syncParseFile asyncParseLinesDef stream
@@ -37,22 +13,21 @@ module rec NachaFile =
     let AsyncParseFile stream = asyncParseFile asyncParseLinesDef stream |> Async.StartAsTask
     
     let AsyncParseLines lines = asyncParseLinesDef lines |> Async.StartAsTask
-      
-    type internal ParseState =
-        {
-            head:FileHeaderRecord MaybeRecord
-            batch:BatchHeaderRecord MaybeRecord
-            entry:EntryDetail MaybeRecord
-            addenda:int
-            finished: bool
-            lineNo:int
+        
+    let internal asyncParseLinesDef (lines: string AsyncSeq) = async {
+            let! {head = result}  =
+                lines |> AsyncSeq.fold foldingParse {
+                                                        head = NoRecord
+                                                        batch = NoRecord
+                                                        entry = NoRecord
+                                                        addenda = 0
+                                                        finished = false
+                                                        lineNo = 1
+                                                     }
+            return result
         }
         
-    let internal asyncParseLinesDef (lines: string AsyncSeq) = 
-
-  
-
-        let parseFromHead (state:ParseState) lineOftext =
+    let internal foldingParse (state:ParseState) lineOftext =
             if state.finished then
                 state
             else            
@@ -102,19 +77,37 @@ module rec NachaFile =
                                  foundEntryAddenda ()
                              | _ ->
                                 errored
-
-        async{
-            let! result = 
-                        lines |> AsyncSeq.fold parseFromHead {
-                                                                head = NoRecord
-                                                                batch = NoRecord
-                                                                entry = NoRecord
-                                                                addenda = 0
-                                                                finished = false
-                                                                lineNo = 1
-                                                             }
-            return result.head
-        }
-        
-      
+    module internal Match =
+        let (|FileHeader|_|)=
+            matchRecord FileHeaderRecord 
+        let (|FileControl|_|)=
+            matchRecord FileControlRecord
+        let (|BatchHeader|_|) =
+            matchRecord BatchHeaderRecord
+        let (|BatchControl|_|) =
+            matchRecord BatchControlRecord
+        let matchEntryRecord constructor batchSEC =
+            matchRecord (fun x-> constructor(batchSEC, x) :> EntryDetail)
+        let (|EntryDetail|_|) batchSEC = 
+            multiMatch [
+                         matchEntryRecord EntryCCD batchSEC
+                         matchEntryRecord EntryPPD batchSEC
+                         matchEntryRecord EntryWildCard batchSEC 
+                       ]
     
+        let matchEntryAddendaRecord constructor  =
+            matchRecord (fun x-> constructor(x) :> EntryAddenda)
+        let (|EntryAddenda|_|) = 
+            multiMatch [
+                         matchEntryAddendaRecord EntryAddendaWildCard
+                       ]
+      
+    type internal ParseState =
+        {
+            head:FileHeaderRecord MaybeRecord
+            batch:BatchHeaderRecord MaybeRecord
+            entry:EntryDetail MaybeRecord
+            addenda:int
+            finished: bool
+            lineNo:int
+        }

@@ -33,6 +33,21 @@ let countAddenda =
              Option.map transform
                >> Option.defaultValue (upcast List())
                >> Seq.length            
+   
+                
+[<Fact>]
+let ``Parse transactions1.ach.txt`` () =
+    parseFile "transactions1.ach.txt" 
+        |> Option.isSome
+        |> should equal true
+        
+[<Fact>]
+let ``Parse transactions2.ach.txt`` () =
+ parseFile "transactions2.ach.txt" 
+     |> Option.isSome
+     |> should equal true
+     
+ 
               
 [<Fact>]
 let ``Parse web-debit.ach.txt`` () =
