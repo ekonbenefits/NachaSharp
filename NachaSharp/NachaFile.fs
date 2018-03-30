@@ -40,23 +40,24 @@ module rec NachaFile =
 
     let internal asyncParseLinesDef (lines: string AsyncSeq) = 
 
-        let parseFromHead (head:FileHeaderRecord MaybeRecord,
-                           batch:BatchHeaderRecord MaybeRecord,
-                           entry:EntryDetail MaybeRecord,
+        let parseFromHead (headState:FileHeaderRecord MaybeRecord,
+                           batchState:BatchHeaderRecord MaybeRecord,
+                           entryState:EntryDetail MaybeRecord,
                            addendaStatus:int,
                            lineNo:int) line =
                            
             let next = lineNo + 1
             let errored = (NoRecord, NoRecord, NoRecord, -1, lineNo)
-            let finished = (head, batch, entry, addendaStatus, lineNo)
+            let finished = (headState, batchState, entryState, addendaStatus, lineNo)
             let foundFileHeader fh = (SomeRecord(fh), NoRecord, NoRecord, 0, next)
-            let foundBatchHeader bh = (head, SomeRecord(bh), NoRecord, 0, next)
-            let foundFileControl () = (head, NoRecord, NoRecord, -1, lineNo)
-            let foundEntryDetail (ed:EntryDetail) = (head, batch, SomeRecord(ed), ed.AddendaRecordedIndicator, next)
-            let foundBatchControl () = (head, NoRecord, NoRecord, 0, next)
-            let foundEntryAddenda () = (head, batch, entry, 2, next)
+            let foundBatchHeader bh = 
+                (headState, SomeRecord(bh), NoRecord, 0, next)
+            let foundFileControl () = (headState, NoRecord, NoRecord, -1, lineNo)
+            let foundEntryDetail (ed:EntryDetail) = (headState, batchState, SomeRecord(ed), ed.AddendaRecordedIndicator, next)
+            let foundBatchControl () = (headState, NoRecord, NoRecord, 0, next)
+            let foundEntryAddenda () = (headState, batchState, entryState, 2, next)
            
-            match (head, batch, addendaStatus) with
+            match (headState, batchState, addendaStatus) with
                 | _, _, -1 -> finished
                 | NoRecord, _, _ ->
                      match line with
@@ -75,7 +76,7 @@ module rec NachaFile =
                          | _ ->  
                             errored
                 | SomeRecord(fh), SomeRecord(bh), _ ->
-                     match entry,addendaStatus,line with
+                     match entryState,addendaStatus,line with
                          | _,_,Match.BatchControl lineNo bc -> 
                              bh.BatchControl <- SomeRecord(bc)
                              foundBatchControl ()
