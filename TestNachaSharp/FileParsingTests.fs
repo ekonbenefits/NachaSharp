@@ -13,16 +13,26 @@ let parseFile file =
         use stream = File.OpenRead(path)
         NachaFile.ParseFile(stream) |> MaybeRecord.toOption
         
-let countBatches: FileHeaderRecord option -> int = 
-            Option.map (fun x-> x.Batches)
+let countBatches = 
+            let transform (x:FileHeaderRecord) =
+                x.Batches
+            Option.map transform
               >> Option.defaultValue (upcast List())
               >> Seq.length
               
-let countEntries: FileHeaderRecord option -> int = 
-            Option.map (fun x-> x.Batches |> Seq.collect(fun y -> y.Entries))
+let countEntries =
+            let transform (x:FileHeaderRecord) =
+                            x.Batches |> Seq.collect(fun y -> y.Entries)
+            Option.map transform
               >> Option.defaultValue (upcast List())
               >> Seq.length
               
+let countAddenda = 
+             let transform (x:FileHeaderRecord) =
+                 x.Batches |> Seq.collect(fun y -> y.Entries) |> Seq.collect(fun z->z.Addenda)
+             Option.map transform
+               >> Option.defaultValue (upcast List())
+               >> Seq.length            
               
 [<Fact>]
 let ``Parse web-debit.ach.txt`` () =
@@ -42,22 +52,33 @@ let ``Parse web-debit.ach.txt Entries`` () =
         |> countEntries
         |> should equal 6
         
-        
 [<Fact>]
-let ``Parse 20110805A.ach.txt`` () =
-    parseFile "20110805A.ach.txt" 
+let ``Parse web-debit.ach.txt addenda`` () =
+ parseFile "web-debit.ach.txt" 
+     |> countAddenda
+     |> should equal 0
+         
+                
+[<Fact>]
+let ``Parse 20110729A.ach.txt`` () =
+    parseFile "20110729A.ach.txt" 
         |> Option.isSome
         |> should equal true
     
 [<Fact>]
-let ``Parse 20110805A.ach.txt Batches`` () =
-    parseFile "20110805A.ach.txt" 
+let ``Parse 20110729A.ach.txt Batches`` () =
+    parseFile "20110729A.ach.txt" 
         |> countBatches
-        |> should equal 4
+        |> should equal 5
         
 [<Fact>]
-let ``Parse 20110805A.ach.txt Entries`` () =
-    parseFile "20110805A.ach.txt" 
+let ``Parse 20110729A.ach.txt Entries`` () =
+    parseFile "20110729A.ach.txt" 
         |> countEntries
-        |> should equal 6
+        |> should greaterThan 100
         
+[<Fact>]
+let ``Parse 20110729A.ach.txt addenda`` () =
+    parseFile "20110729A.ach.txt" 
+        |> countAddenda
+        |> should greaterThan 50       
