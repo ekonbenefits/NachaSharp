@@ -7,7 +7,7 @@
   <ItemGroup>
     <Compile Include="Helper.fs" />
     <Compile Include="Format.fs" />
-    <Compile Include="FileFileMeta.fs" />
+    <Compile Include="FlatFileMeta.fs" />
     <Compile Include="FlatRowSetup.fs" />
   </ItemGroup>
   <ItemGroup>
