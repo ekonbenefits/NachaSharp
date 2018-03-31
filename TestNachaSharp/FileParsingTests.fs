@@ -11,7 +11,7 @@ open System.Collections.Generic
 let parseFile file =
         let path = Path.Combine(__SOURCE_DIRECTORY__,"Data", file)
         use stream = File.OpenRead(path)
-        NachaFile.ParseFile(stream) |> MaybeRecord.toOption
+        NachaFile.ParseFile(stream) |> MaybeRow.toOption
         
 let countBatches = 
             let transform (x:FileHeaderRecord) =

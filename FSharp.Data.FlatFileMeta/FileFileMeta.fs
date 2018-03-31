@@ -45,12 +45,12 @@ type internal ChildList<'T when 'T :> FlatRow>(parent:FlatRow) =
         item.Parent <- SomeRecord(parent)
         base.InsertItem(index, item)
         if item.HelperGetAllowMutation () then
-            item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
+            item.Parent |> MaybeRow.toOption |> Option.iter (fun x -> x.Changed())
     override this.SetItem(index, item) =
         item.Parent <- SomeRecord(parent)
         base.SetItem(index, item)
         if item.HelperGetAllowMutation () then
-            item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
+            item.Parent |> MaybeRow.toOption |> Option.iter (fun x -> x.Changed())
         
 [<AbstractClass>]
 type FlatRow(rowData:string) =
@@ -154,7 +154,7 @@ type FlatRow(rowData:string) =
           
     member internal this.HelperGetAllowMutation () =
         this.Root 
-            |> MaybeRecord.toOption
+            |> MaybeRow.toOption
             |> Option.map (fun x -> x.AllowMutation)
             |> Option.defaultValue this.AllowMutation
 
@@ -224,7 +224,8 @@ type FlatRow(rowData:string) =
 type MaybeRecord<'T when 'T :> FlatRow> =
     SomeRecord of 'T | NoRecord
     
-module MaybeRecord =
+[<RequireQualifiedAccess>]
+module MaybeRow =
 
       [<CompiledName("IsSomeRecord")>]      
       let isSomeRecord =
@@ -293,7 +294,7 @@ module MetaDataHelper =
             None
             
     let isMissingRecordButHasString record data  =
-        record |> MaybeRecord.isNoRecord && data |> Option.isSome
+        record |> MaybeRow.isNoRecord && data |> Option.isSome
            
     let multiMatch (matchers:(int -> string -> #FlatRow option) list) lineNo value =
         matchers
