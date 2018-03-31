@@ -40,6 +40,7 @@ type EntryCCD(batchSEC, rowInput) =
     static let entrySEC = "CCD"
     static member Construct(r) = EntryCCD(entrySEC, r)
     override __.EntrySEC with get () = entrySEC
+    
     static member Create() = createRow {
          return! EntryCCD.Construct
     }
@@ -95,9 +96,11 @@ type EntryPPD(batchSEC, rowInput) =
     static let entrySEC = "PPD"
     static member Construct(r) = EntryCCD(entrySEC, r)
     override __.EntrySEC with get () = entrySEC
+    
     static member Create() = createRow {
             return! EntryPPD.Construct
     }
+    
     override this.Setup () = 
         FlatRowProvider.setup this <|
                 lazy ({ 
