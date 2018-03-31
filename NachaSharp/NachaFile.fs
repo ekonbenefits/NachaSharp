@@ -37,19 +37,45 @@ module rec NachaFile =
             else            
                 let next = state.lineNo + 1
                 let errored = {state with head = NoRow; finished = true}
+
                 let foundFileHeader fh = {state with head = SomeRow(fh); lineNo = next}
-                let foundBatchHeader bh = {state with batch = SomeRow(bh); lineNo = next}
-                let foundFileControl () = {state with finished = true}
-                let foundEntryDetail (ed:EntryDetail) = { state with
-                                                            entry = SomeRow(ed)
-                                                            addenda = ed.AddendaRecordedIndicator
-                                                            lineNo = next }
-                let foundBatchControl () = { state with
-                                                batch = NoRow
-                                                entry = NoRow
-                                                addenda = 0
-                                                lineNo = next }
-                let foundEntryAddenda () = { state with addenda= 2; lineNo = next}
+
+                let foundBatchHeader bh = 
+                    maybeRow { let! head = state.head
+                               head.Batches.Add(bh)
+                             } |> ignore
+                    {state with batch = SomeRow(bh); lineNo = next}
+                    
+                let foundFileControl fc = 
+                    maybeRow { let! head = state.head
+                               head.FileControl<- SomeRow(fc)
+                             } |> ignore
+                    {state with finished = true}
+
+                let foundEntryDetail (ed:EntryDetail) = 
+                    maybeRow { let! batch = state.batch
+                               batch.Entries.Add(ed)
+                             } |>ignore
+                    { state with
+                        entry = SomeRow(ed)
+                        addenda = ed.AddendaRecordedIndicator
+                        lineNo = next }
+                        
+                let foundBatchControl bc = 
+                    maybeRow { let! batch = state.batch
+                               batch.BatchControl <- SomeRow(bc)
+                             } |> ignore
+                    { state with
+                            batch = NoRow
+                            entry = NoRow
+                            addenda = 0
+                            lineNo = next }
+
+                let foundEntryAddenda add = 
+                    maybeRow { let! ed = state.entry
+                               ed.Addenda.Add(add)
+                             } |> ignore
+                    { state with addenda= 2; lineNo = next}
                
                 match (state.head, state.batch) with
                     | NoRow, _ ->
@@ -58,27 +84,22 @@ module rec NachaFile =
                                 foundFileHeader fh
                              | _ ->  
                                 errored
-                    | SomeRow(fh), NoRow ->
+                    | SomeRow(_), NoRow ->
                          match lineOftext with
                              | Match.FileControl state.lineNo fc ->
-                                fh.FileControl<- SomeRow(fc)
-                                foundFileControl ()                     
+                                foundFileControl fc                     
                              | Match.BatchHeader state.lineNo bh ->
-                                fh.Batches.Add(bh)
                                 foundBatchHeader bh
                              | _ ->  
                                 errored
-                    | SomeRow(fh), SomeRow(bh) ->
+                    | SomeRow(_), SomeRow(bh) ->
                          match state.entry,state.addenda,lineOftext with
                              | _,_,Match.BatchControl state.lineNo bc -> 
-                                 bh.BatchControl <- SomeRow(bc)
-                                 foundBatchControl ()
+                                 foundBatchControl bc
                              | _,i,Match.EntryDetail bh.StandardEntryClass state.lineNo ed when i <> 1 ->
-                                 bh.Entries.Add(ed)
                                  foundEntryDetail ed
-                             | SomeRow(ed),i,Match.EntryAddenda state.lineNo add when i > 0 ->
-                                 ed.Addenda.Add(add)
-                                 foundEntryAddenda ()
+                             | SomeRow(_),i,Match.EntryAddenda state.lineNo add when i > 0 ->
+                                 foundEntryAddenda add
                              | _ ->
                                 errored
     module internal Match =
