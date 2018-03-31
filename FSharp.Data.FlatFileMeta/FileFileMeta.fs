@@ -39,7 +39,7 @@ type ParsedMeta = int * string IList * IDictionary<string, int * ColumnIdentifie
 type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
 
-type internal ChildList<'T when 'T :> FlatRecord>(parent:FlatRecord) =
+type internal ChildList<'T when 'T :> FlatRow>(parent:FlatRow) =
     inherit System.Collections.ObjectModel.Collection<'T>()
     override this.InsertItem(index, item) =
         item.Parent <- SomeRecord(parent)
@@ -53,7 +53,7 @@ type internal ChildList<'T when 'T :> FlatRecord>(parent:FlatRecord) =
             item.Parent |> MaybeRecord.toOption |> Option.iter (fun x -> x.Changed())
         
 [<AbstractClass>]
-type FlatRecord(rowData:string) =
+type FlatRow(rowData:string) =
     
 
     let rowInput = Helper.optionOfStringEmpty rowData
@@ -64,10 +64,10 @@ type FlatRecord(rowData:string) =
     
     let children = Dictionary<string,obj>()
     
-    member val Parent: FlatRecord MaybeRecord = NoRecord with get,set
+    member val Parent: FlatRow MaybeRecord = NoRecord with get,set
     
-    member this.Root:FlatRecord MaybeRecord = 
-            let rec findRoot (f:FlatRecord MaybeRecord) =
+    member this.Root:FlatRow MaybeRecord = 
+            let rec findRoot (f:FlatRow MaybeRecord) =
                 match f with 
                     | NoRecord -> f
                     | SomeRecord(p) -> findRoot p.Parent
@@ -90,9 +90,9 @@ type FlatRecord(rowData:string) =
             invalidOp "AllowMutation is not set on root"
             
         children.Values
-            |> Seq.iter (function | :? FlatRecord as f -> f.Calculate()
+            |> Seq.iter (function | :? FlatRow as f -> f.Calculate()
                                   | :? System.Collections.IEnumerable as l -> 
-                                        l |> Enumerable.ofType<FlatRecord>
+                                        l |> Enumerable.ofType<FlatRow>
                                           |> Seq.iter (fun i->i.Calculate())
                                   | _ ->())
                                       
@@ -164,19 +164,19 @@ type FlatRecord(rowData:string) =
                     | ______ -> let d = defaultValue.Force()
                                 children.Add(key, d)
                                 d
-    member this.GetChild(defaultValue:#FlatRecord MaybeRecord Lazy, [<CallerMemberName>] ?memberName: string) : #FlatRecord MaybeRecord= 
+    member this.GetChild(defaultValue:#FlatRow MaybeRecord Lazy, [<CallerMemberName>] ?memberName: string) : #FlatRow MaybeRecord= 
             let key = 
                 memberName
                    |> Option.defaultWith Helper.raiseMissingCompilerMemberName
             this.HelperGetChild defaultValue key
             
-    member this.GetChildList([<CallerMemberName>] ?memberName: string) : #FlatRecord IList = 
+    member this.GetChildList([<CallerMemberName>] ?memberName: string) : #FlatRow IList = 
                 let key = 
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
                 this.HelperGetChild(lazy upcast ChildList(this)) key   
                                    
-    member this.SetChild(value:#FlatRecord MaybeRecord, [<CallerMemberName>] ?memberName: string) : unit = 
+    member this.SetChild(value:#FlatRow MaybeRecord, [<CallerMemberName>] ?memberName: string) : unit = 
                 let key = 
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
@@ -221,7 +221,7 @@ type FlatRecord(rowData:string) =
         this.Changed()
  
  
-type MaybeRecord<'T when 'T :> FlatRecord> =
+type MaybeRecord<'T when 'T :> FlatRow> =
     SomeRecord of 'T | NoRecord
     
 module MaybeRecord =
@@ -240,32 +240,32 @@ module MaybeRecord =
 
 
       [<CompiledName("ToOption")>]        
-      let toOption<'T when 'T :> FlatRecord> (maybeRec: MaybeRecord<'T>) : Option<'T> =
+      let toOption<'T when 'T :> FlatRow> (maybeRec: MaybeRecord<'T>) : Option<'T> =
             match maybeRec with 
                 | SomeRecord x -> Some(x)
                 | NoRecord -> None
         
       [<CompiledName("OfOption")>]        
-      let ofOption (opt:#FlatRecord option) =
+      let ofOption (opt:#FlatRow option) =
             match opt with  
                 | Some x -> SomeRecord(x)
                 | None -> NoRecord       
                   
 module MetaDataHelper =   
     [<Extension;Sealed;AbstractClass>] 
-    type Cache<'T when 'T :> FlatRecord> ()=
+    type Cache<'T when 'T :> FlatRow> ()=
         static member val MetaData: ParsedMeta option = Option.None with get,set
 
 
-    let createRecord<'T when 'T :> FlatRecord> (constructor:string -> 'T) (init:'T -> unit) =
+    let createRecord<'T when 'T :> FlatRow> (constructor:string -> 'T) (init:'T -> unit) =
                             let record = null |> constructor
                             record |> init
                             record
 
-    let syncParseLines (parser:string AsyncSeq -> #FlatRecord MaybeRecord Async) = 
+    let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRecord Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
             
-    let asyncParseFile (parser:string AsyncSeq -> #FlatRecord MaybeRecord Async) (stream:Stream) =
+    let asyncParseFile (parser:string AsyncSeq -> #FlatRow MaybeRecord Async) (stream:Stream) =
         let seq = asyncSeq{
                         use streamReader = new StreamReader(stream)
                         let mutable completed = false
@@ -284,7 +284,7 @@ module MetaDataHelper =
     let syncParseFile parser stream = 
          asyncParseFile parser stream |> Async.RunSynchronously
 
-    let matchRecord (constructor:string -> #FlatRecord) lineNumber value  =
+    let matchRecord (constructor:string -> #FlatRow) lineNumber value  =
         let result = value |> constructor       
         if result.IsMatch() && not <| result.IsNew() then
             result.ParsedLineNumber <- Some(lineNumber)
@@ -295,13 +295,13 @@ module MetaDataHelper =
     let isMissingRecordButHasString record data  =
         record |> MaybeRecord.isNoRecord && data |> Option.isSome
            
-    let multiMatch (matchers:(int -> string -> #FlatRecord option) list) lineNo value =
+    let multiMatch (matchers:(int -> string -> #FlatRow option) list) lineNo value =
         matchers
             |> List.map (fun f -> f lineNo value)
             |> List.tryFind (fun x->x.IsSome)
             |> Option.flatten
 
-    let setup<'T when 'T :> FlatRecord>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
+    let setup<'T when 'T :> FlatRow>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
         match Cache<'T>.MetaData with
             | Some(md) -> md
             | None ->

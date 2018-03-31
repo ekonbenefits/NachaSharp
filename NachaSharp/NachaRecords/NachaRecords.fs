@@ -5,7 +5,7 @@ open FSharp.Data.FlatFileMeta
 
 [<AbstractClass>]
 type NachaRecord(rowInput, recordTypeCode) =
-    inherit FlatRecord(rowInput)
+    inherit FlatRow(rowInput)
     
     override this.PostSetup() =
         if this.IsNew() then
