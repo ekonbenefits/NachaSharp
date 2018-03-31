@@ -3,7 +3,6 @@ namespace NachaSharp
 open System
 open System.Collections.Generic
 open FSharp.Data.FlatFileMeta
-open FSharp.Data.FlatFileMeta.FlatRowSetup
 
 type FileControlRecord(rowInput) =
     inherit NachaRecord(rowInput, "9")
@@ -13,7 +12,7 @@ type FileControlRecord(rowInput) =
         }
         
     override this.Setup () = 
-        setup this <|
+        FlatRowProvider.setup this <|
                 lazy ({ 
                          columns =[
                                     MetaColumn.Make( 1, this.RecordTypeCode, Format.leftPadString)

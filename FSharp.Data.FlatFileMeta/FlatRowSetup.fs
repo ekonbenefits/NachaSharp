@@ -6,7 +6,8 @@ open System.IO
 open System.Collections.Generic
 open FSharp.Interop.Compose.Linq
 
-module FlatRowSetup =   
+[<RequireQualifiedAccess>]
+module FlatRowProvider =   
     [<Extension;Sealed;AbstractClass>] 
     type Cache<'T when 'T :> FlatRow> ()=
         static member val MetaData: ParsedMeta option = Option.None with get,set

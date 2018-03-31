@@ -2,7 +2,6 @@ namespace NachaSharp
 
 open System.Collections.Generic
 open FSharp.Data.FlatFileMeta
-open FSharp.Data.FlatFileMeta.FlatRowSetup
 
 [<AbstractClass>]
 type EntryDetail(batchSEC, rowInput) =
@@ -25,7 +24,7 @@ type EntryWildCard(batchSEC, rowInput) =
     override __.EntrySEC with get () = batchSEC
 
     override this.Setup () = 
-        setup this <|
+        FlatRowProvider.setup this <|
                 lazy ({ 
                          columns =[
                                     MetaColumn.Make(1, this.RecordTypeCode, Format.leftPadString)
@@ -42,11 +41,11 @@ type EntryCCD(batchSEC, rowInput) =
     static member Construct(r) = EntryCCD(entrySEC, r)
     override __.EntrySEC with get () = entrySEC
     static member Create() = createRow {
-            return! EntryCCD.Construct
+         return! EntryCCD.Construct
     }
     
     override this.Setup () = 
-        setup this <|
+        FlatRowProvider.setup this <|
                 lazy ({ 
                          columns =[
                                      MetaColumn.Make( 1, this.RecordTypeCode, Format.leftPadString)
@@ -100,7 +99,7 @@ type EntryPPD(batchSEC, rowInput) =
             return! EntryPPD.Construct
     }
     override this.Setup () = 
-        setup this <|
+        FlatRowProvider.setup this <|
                 lazy ({ 
                          columns =[ 
                                         MetaColumn.Make( 1, this.RecordTypeCode, Format.leftPadString)

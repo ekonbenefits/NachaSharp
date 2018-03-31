@@ -1,16 +1,15 @@
 namespace NachaSharp
 open FSharp.Data.FlatFileMeta
-open FSharp.Data.FlatFileMeta.FlatRowSetup
 open FSharp.Control
 open System.IO
 
 module rec NachaFile =
 
-    let ParseLines lines = syncParseLines asyncParseLinesDef lines
+    let ParseLines lines = FlatRowProvider.syncParseLines asyncParseLinesDef lines
     
-    let ParseFile stream =  syncParseFile asyncParseLinesDef stream
+    let ParseFile stream =  FlatRowProvider.syncParseFile asyncParseLinesDef stream
                    
-    let AsyncParseFile stream =  asyncParseFile asyncParseLinesDef stream |> Async.StartAsTask
+    let AsyncParseFile stream =  FlatRowProvider.asyncParseFile asyncParseLinesDef stream |> Async.StartAsTask
     
     let AsyncParseLines lines = asyncParseLinesDef lines |> Async.StartAsTask
         
@@ -100,26 +99,26 @@ module rec NachaFile =
                                 errored
     module internal Match =
         let (|FileHeader|_|)=
-            matchRecord FileHeaderRecord 
+            FlatRowProvider.matchRecord FileHeaderRecord 
         let (|FileControl|_|)=
-            matchRecord FileControlRecord
+            FlatRowProvider.matchRecord FileControlRecord
         let (|BatchHeader|_|) =
-            matchRecord BatchHeaderRecord
+            FlatRowProvider.matchRecord BatchHeaderRecord
         let (|BatchControl|_|) =
-            matchRecord BatchControlRecord
+            FlatRowProvider.matchRecord BatchControlRecord
         let matchEntryRecord constructor batchSEC =
-            matchRecord (fun x-> constructor(batchSEC, x) :> EntryDetail)
+            FlatRowProvider.matchRecord (fun x-> constructor(batchSEC, x) :> EntryDetail)
         let (|EntryDetail|_|) batchSEC = 
-            multiMatch [
+            FlatRowProvider.multiMatch [
                          matchEntryRecord EntryCCD batchSEC
                          matchEntryRecord EntryPPD batchSEC
                          matchEntryRecord EntryWildCard batchSEC 
                        ]
     
         let matchEntryAddendaRecord constructor  =
-            matchRecord (fun x-> constructor(x) :> EntryAddenda)
+            FlatRowProvider.matchRecord (fun x-> constructor(x) :> EntryAddenda)
         let (|EntryAddenda|_|) = 
-            multiMatch [
+            FlatRowProvider.multiMatch [
                          matchEntryAddendaRecord EntryAddendaWildCard
                        ]
       

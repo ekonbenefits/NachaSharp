@@ -1,7 +1,6 @@
 namespace NachaSharp
 
 open FSharp.Data.FlatFileMeta
-open FSharp.Data.FlatFileMeta.FlatRowSetup
 
 
 type BatchControlRecord(rowInput) =
@@ -12,7 +11,7 @@ type BatchControlRecord(rowInput) =
         }
 
     override this.Setup () = 
-        setup this <|
+        FlatRowProvider.setup this <|
                 lazy ({ 
                          columns =[
                                         MetaColumn.Make( 1, this.RecordTypeCode, Format.leftPadString)
