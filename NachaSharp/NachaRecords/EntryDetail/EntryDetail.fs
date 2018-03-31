@@ -5,10 +5,13 @@ open FSharp.Data.FlatFileMeta
 open FSharp.Data.FlatFileMeta.MetaDataHelper
 
 [<AbstractClass>]
-type EntryDetail(entrySEC, batchSEC, rowInput) =
+type EntryDetail(batchSEC, rowInput) =
     inherit NachaRecord(rowInput, "6")
-    override __.IsIdentified() =
-        base.IsIdentified() && batchSEC = entrySEC
+
+    abstract EntrySEC:string with get
+
+    override this.IsIdentified() =
+        base.IsIdentified() && batchSEC = this.EntrySEC
     
     member this.Addenda 
         with get () = this.GetChildList<EntryAddenda>()
@@ -18,7 +21,9 @@ type EntryDetail(entrySEC, batchSEC, rowInput) =
         and set value = this.SetColumn<int> value
 
 type EntryWildCard(batchSEC, rowInput) =
-    inherit EntryDetail(batchSEC, batchSEC, rowInput)
+    inherit EntryDetail(batchSEC, rowInput)
+    override __.EntrySEC with get () = batchSEC
+
     override this.Setup () = 
         setup this <|
                 lazy ({ 
@@ -32,10 +37,13 @@ type EntryWildCard(batchSEC, rowInput) =
                      })
 
 type EntryCCD(batchSEC, rowInput) =
-    inherit EntryDetail("CCD", batchSEC, rowInput)
-    
-     static member Create() =
-                MetaDataHelper.createRecord (fun x->EntryCCD("CCD", x)) ignore
+    inherit EntryDetail(batchSEC, rowInput)
+    static let entrySEC = "CCD"
+    static member Construct(r) = EntryCCD(entrySEC, r)
+    override __.EntrySEC with get () = entrySEC
+    static member Create() = createRow {
+            return! EntryCCD.Construct
+    }
     
     override this.Setup () = 
         setup this <|
@@ -84,7 +92,13 @@ type EntryCCD(batchSEC, rowInput) =
             and set value = this.SetColumn<string> value  
                      
 type EntryPPD(batchSEC, rowInput) =
-    inherit EntryDetail("PPD", batchSEC, rowInput)
+    inherit EntryDetail(batchSEC, rowInput)
+    static let entrySEC = "PPD"
+    static member Construct(r) = EntryCCD(entrySEC, r)
+    override __.EntrySEC with get () = entrySEC
+    static member Create() = createRow {
+            return! EntryPPD.Construct
+    }
     override this.Setup () = 
         setup this <|
                 lazy ({ 

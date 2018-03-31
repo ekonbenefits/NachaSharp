@@ -8,12 +8,11 @@ open FSharp.Data.FlatFileMeta.MetaDataHelper
 type BatchHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "5")
     
-     static member Create() =
-        MetaDataHelper.createRecord BatchHeaderRecord 
-            (fun bh ->
-                bh.BatchControl <- SomeRow(BatchControlRecord.Create())
-                ()
-            )
+     static member Create() = createRow {
+            let! bh = BatchHeaderRecord
+            bh.BatchControl <- SomeRow <| BatchControlRecord.Create()
+            return bh
+        }
             
     override this.Setup () = 
         setup this <|

@@ -10,6 +10,16 @@ open System
 open FSharp.Interop.Compose.Linq
 
 
+[<AutoOpen>]
+module CreateRowExtension =
+    type CreateRowBuilder() =
+        member __.Bind(m:string->#FlatRow, f) = 
+                null |> m |> f
+        member __.Return(x) = x
+        
+        member __.ReturnFrom(x:string->#FlatRow) = null |> x
+    let createRow = new CreateRowBuilder()      
+
 type MaybeRow<'T when 'T :> FlatRow> =
     SomeRow of 'T | NoRow
    
@@ -309,12 +319,6 @@ module MetaDataHelper =
     [<Extension;Sealed;AbstractClass>] 
     type Cache<'T when 'T :> FlatRow> ()=
         static member val MetaData: ParsedMeta option = Option.None with get,set
-
-
-    let createRecord<'T when 'T :> FlatRow> (constructor:string -> 'T) (init:'T -> unit) =
-                            let record = null |> constructor
-                            record |> init
-                            record
 
     let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRow Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
