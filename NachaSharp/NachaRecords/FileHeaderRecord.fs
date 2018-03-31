@@ -23,11 +23,10 @@ type FileHeaderRecord(rowInput) =
         
     override this.Calculate () =
          base.Calculate()
-         match this.FileControl with
-            | SomeRow(fc) -> 
-                fc.BatchCount <- this.Batches.Count
-            | _ -> ()
-         ()
+         maybeRow {
+            let! fc = this.FileControl
+            fc.BatchCount <- this.Batches.Count
+         } |> ignore
         
     override this.Setup () = 
         setup this <|
