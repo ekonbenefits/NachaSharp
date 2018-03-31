@@ -1,6 +1,5 @@
 namespace NachaSharp
 
-open System.Collections.Generic
 open FSharp.Data.FlatFileMeta
 
 [<AbstractClass>]

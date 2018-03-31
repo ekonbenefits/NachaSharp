@@ -1,7 +1,6 @@
 namespace NachaSharp
 open FSharp.Data.FlatFileMeta
 open FSharp.Control
-open System.IO
 
 module rec NachaFile =
 
@@ -9,9 +8,11 @@ module rec NachaFile =
     
     let ParseFile stream =  FlatRowProvider.syncParseFile asyncParseLinesDef stream
                    
-    let AsyncParseFile stream =  FlatRowProvider.asyncParseFile asyncParseLinesDef stream |> Async.StartAsTask
+    let AsyncParseFile stream =  FlatRowProvider.asyncParseFile asyncParseLinesDef stream 
+                                 |> Async.StartAsTask
     
-    let AsyncParseLines lines = asyncParseLinesDef lines |> Async.StartAsTask
+    let AsyncParseLines lines = asyncParseLinesDef lines 
+                                |> Async.StartAsTask
         
     let internal asyncParseLinesDef (lines: string AsyncSeq) = async {
             let! {head = result}  =

@@ -1,7 +1,5 @@
 namespace NachaSharp
 
-open System
-open System.Collections.Generic
 open FSharp.Data.FlatFileMeta
 
 type FileControlRecord(rowInput) =
@@ -20,8 +18,8 @@ type FileControlRecord(rowInput) =
                                     MetaColumn.Make( 6, this.BlockCount, Format.zerodInt)
                                     MetaColumn.Make( 8, this.Entry_AddendaCount, Format.zerodInt)
                                     MetaColumn.Make(10, this.EntryHash, Format.zerodInt)
-                                    MetaColumn.Make( 12, this.TotalDebitEntryDollar, Format.reqMoney)
-                                    MetaColumn.Make( 12, this.TotalCreditEntryDollar, Format.reqMoney)
+                                    MetaColumn.Make(12, this.TotalDebitEntryDollar, Format.reqMoney)
+                                    MetaColumn.Make(12, this.TotalCreditEntryDollar, Format.reqMoney)
                                     MetaColumn.PlaceHolder(39)
                                   ]
                          length = 94

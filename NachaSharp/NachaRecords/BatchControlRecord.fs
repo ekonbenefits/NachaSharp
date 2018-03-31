@@ -2,7 +2,6 @@ namespace NachaSharp
 
 open FSharp.Data.FlatFileMeta
 
-
 type BatchControlRecord(rowInput) =
     inherit NachaRecord(rowInput, "8")
     

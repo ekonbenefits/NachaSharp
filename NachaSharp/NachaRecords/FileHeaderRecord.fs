@@ -1,7 +1,6 @@
 namespace NachaSharp
 
 open System
-open System.Collections.Generic
 open FSharp.Data.FlatFileMeta
 
 type FileHeaderRecord(rowInput) =
