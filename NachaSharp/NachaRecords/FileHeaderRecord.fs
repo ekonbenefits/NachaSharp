@@ -3,7 +3,7 @@ namespace NachaSharp
 open System
 open System.Collections.Generic
 open FSharp.Data.FlatFileMeta
-open FSharp.Data.FlatFileMeta.MetaDataHelper
+open FSharp.Data.FlatFileMeta.FlatRowSetup
 
 type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")

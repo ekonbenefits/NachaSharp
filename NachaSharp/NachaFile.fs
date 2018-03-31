@@ -1,20 +1,16 @@
 namespace NachaSharp
 open FSharp.Data.FlatFileMeta
-open FSharp.Data.FlatFileMeta.MetaDataHelper
+open FSharp.Data.FlatFileMeta.FlatRowSetup
 open FSharp.Control
 open System.IO
 
 module rec NachaFile =
 
-
-
-
-
     let ParseLines lines = syncParseLines asyncParseLinesDef lines
     
-    let ParseFile stream = syncParseFile asyncParseLinesDef stream
+    let ParseFile stream =  syncParseFile asyncParseLinesDef stream
                    
-    let AsyncParseFile stream = asyncParseFile asyncParseLinesDef stream |> Async.StartAsTask
+    let AsyncParseFile stream =  asyncParseFile asyncParseLinesDef stream |> Async.StartAsTask
     
     let AsyncParseLines lines = asyncParseLinesDef lines |> Async.StartAsTask
         

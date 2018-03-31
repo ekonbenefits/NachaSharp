@@ -1,7 +1,7 @@
 namespace NachaSharp
 
 open FSharp.Data.FlatFileMeta
-open FSharp.Data.FlatFileMeta.MetaDataHelper
+open FSharp.Data.FlatFileMeta.FlatRowSetup
 
 [<AbstractClass>]
 type EntryAddenda(rowInput) =
