@@ -11,20 +11,20 @@ type FileHeaderRecord(rowInput) =
     static member Create() =
             MetaDataHelper.createRecord FileHeaderRecord 
                 (fun fh ->
-                    fh.FileControl <- SomeRecord(FileControlRecord.Create())
+                    fh.FileControl <- SomeRow(FileControlRecord.Create())
                     ()
                 )
     
     member this.Batches 
         with get () = this.GetChildList<BatchHeaderRecord>()
     member this.FileControl 
-        with get () = this.GetChild<FileControlRecord>(lazy NoRecord)
+        with get () = this.GetChild<FileControlRecord>(lazy NoRow)
         and set value = this.SetChild<FileControlRecord>(value)
         
     override this.Calculate () =
          base.Calculate()
          match this.FileControl with
-            | SomeRecord(fc) -> 
+            | SomeRow(fc) -> 
                 fc.BatchCount <- this.Batches.Count
             | _ -> ()
          ()

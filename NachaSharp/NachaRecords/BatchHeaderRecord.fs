@@ -11,7 +11,7 @@ type BatchHeaderRecord(rowInput) =
      static member Create() =
         MetaDataHelper.createRecord BatchHeaderRecord 
             (fun bh ->
-                bh.BatchControl <- SomeRecord(BatchControlRecord.Create())
+                bh.BatchControl <- SomeRow(BatchControlRecord.Create())
                 ()
             )
             
@@ -40,13 +40,13 @@ type BatchHeaderRecord(rowInput) =
         with get () = this.GetChildList<EntryDetail>()
         
     member this.BatchControl 
-        with get () = this.GetChild<BatchControlRecord>(lazy NoRecord)
+        with get () = this.GetChild<BatchControlRecord>(lazy NoRow)
         and set value = this.SetChild<BatchControlRecord>(value)
         
     override this.Calculate () =
                  base.Calculate()
                  match this.BatchControl with
-                    | SomeRecord(bc) -> 
+                    | SomeRow(bc) -> 
                         let c = this.Entries |> Seq.sumBy (fun x->x.Addenda.Count + 1)
                         bc.Entry_AddendaCount <- c
                     | _ -> ()

@@ -21,9 +21,9 @@ module rec NachaFile =
     let internal asyncParseLinesDef (lines: string AsyncSeq) = async {
             let! {head = result}  =
                 lines |> AsyncSeq.fold foldingParse {
-                                                        head = NoRecord
-                                                        batch = NoRecord
-                                                        entry = NoRecord
+                                                        head = NoRow
+                                                        batch = NoRow
+                                                        entry = NoRow
                                                         addenda = 0
                                                         finished = false
                                                         lineNo = 1
@@ -36,47 +36,47 @@ module rec NachaFile =
                 state
             else            
                 let next = state.lineNo + 1
-                let errored = {state with head = NoRecord; finished = true}
-                let foundFileHeader fh = {state with head = SomeRecord(fh); lineNo = next}
-                let foundBatchHeader bh = {state with batch = SomeRecord(bh); lineNo = next}
+                let errored = {state with head = NoRow; finished = true}
+                let foundFileHeader fh = {state with head = SomeRow(fh); lineNo = next}
+                let foundBatchHeader bh = {state with batch = SomeRow(bh); lineNo = next}
                 let foundFileControl () = {state with finished = true}
                 let foundEntryDetail (ed:EntryDetail) = { state with
-                                                            entry = SomeRecord(ed)
+                                                            entry = SomeRow(ed)
                                                             addenda = ed.AddendaRecordedIndicator
                                                             lineNo = next }
                 let foundBatchControl () = { state with
-                                                batch = NoRecord
-                                                entry = NoRecord
+                                                batch = NoRow
+                                                entry = NoRow
                                                 addenda = 0
                                                 lineNo = next }
                 let foundEntryAddenda () = { state with addenda= 2; lineNo = next}
                
                 match (state.head, state.batch) with
-                    | NoRecord, _ ->
+                    | NoRow, _ ->
                          match lineOftext with
                              | Match.FileHeader state.lineNo (fh) -> 
                                 foundFileHeader fh
                              | _ ->  
                                 errored
-                    | SomeRecord(fh), NoRecord ->
+                    | SomeRow(fh), NoRow ->
                          match lineOftext with
                              | Match.FileControl state.lineNo fc ->
-                                fh.FileControl<- SomeRecord(fc)
+                                fh.FileControl<- SomeRow(fc)
                                 foundFileControl ()                     
                              | Match.BatchHeader state.lineNo bh ->
                                 fh.Batches.Add(bh)
                                 foundBatchHeader bh
                              | _ ->  
                                 errored
-                    | SomeRecord(fh), SomeRecord(bh) ->
+                    | SomeRow(fh), SomeRow(bh) ->
                          match state.entry,state.addenda,lineOftext with
                              | _,_,Match.BatchControl state.lineNo bc -> 
-                                 bh.BatchControl <- SomeRecord(bc)
+                                 bh.BatchControl <- SomeRow(bc)
                                  foundBatchControl ()
                              | _,i,Match.EntryDetail bh.StandardEntryClass state.lineNo ed when i <> 1 ->
                                  bh.Entries.Add(ed)
                                  foundEntryDetail ed
-                             | SomeRecord(ed),i,Match.EntryAddenda state.lineNo add when i > 0 ->
+                             | SomeRow(ed),i,Match.EntryAddenda state.lineNo add when i > 0 ->
                                  ed.Addenda.Add(add)
                                  foundEntryAddenda ()
                              | _ ->

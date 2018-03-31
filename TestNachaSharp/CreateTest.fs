@@ -34,6 +34,6 @@ let ``Check Batch Count`` () =
         file.Batches 
                 |> Seq.head 
                 |> (fun x->x.BatchControl 
-                        |> function | SomeRecord(y) -> y.Entry_AddendaCount 
-                                    | NoRecord -> 0)
+                        |> function | SomeRow(y) -> y.Entry_AddendaCount 
+                                    | NoRow -> 0)
                 |> should equal 1

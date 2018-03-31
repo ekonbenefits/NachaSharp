@@ -42,12 +42,12 @@ type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 type internal ChildList<'T when 'T :> FlatRow>(parent:FlatRow) =
     inherit System.Collections.ObjectModel.Collection<'T>()
     override this.InsertItem(index, item) =
-        item.Parent <- SomeRecord(parent)
+        item.Parent <- SomeRow(parent)
         base.InsertItem(index, item)
         if item.HelperGetAllowMutation () then
             item.Parent |> MaybeRow.toOption |> Option.iter (fun x -> x.Changed())
     override this.SetItem(index, item) =
-        item.Parent <- SomeRecord(parent)
+        item.Parent <- SomeRow(parent)
         base.SetItem(index, item)
         if item.HelperGetAllowMutation () then
             item.Parent |> MaybeRow.toOption |> Option.iter (fun x -> x.Changed())
@@ -64,13 +64,13 @@ type FlatRow(rowData:string) =
     
     let children = Dictionary<string,obj>()
     
-    member val Parent: FlatRow MaybeRow = NoRecord with get,set
+    member val Parent: FlatRow MaybeRow = NoRow with get,set
     
     member this.Root:FlatRow MaybeRow = 
             let rec findRoot (f:FlatRow MaybeRow) =
                 match f with 
-                    | NoRecord -> f
-                    | SomeRecord(p) -> findRoot p.Parent
+                    | NoRow -> f
+                    | SomeRow(p) -> findRoot p.Parent
             findRoot this.Parent
     
     member val ParsedLineNumber: int option = None with get,set
@@ -97,8 +97,8 @@ type FlatRow(rowData:string) =
                                   | _ ->())
                                       
     member this.Changed() =
-            this.Root |> function | SomeRecord(r) -> r.Changed() 
-                                  | NoRecord -> this.Calculate()
+            this.Root |> function | SomeRow(r) -> r.Changed() 
+                                  | NoRow -> this.Calculate()
     
     member this.IsMatch() = this.DoesLengthMatch() && this.IsIdentified ()
     
@@ -222,35 +222,35 @@ type FlatRow(rowData:string) =
  
  
 type MaybeRow<'T when 'T :> FlatRow> =
-    SomeRecord of 'T | NoRecord
+    SomeRow of 'T | NoRow
     
 [<RequireQualifiedAccess>]
 module MaybeRow =
 
-      [<CompiledName("IsSomeRecord")>]      
+      [<CompiledName("IsSomeRow")>]      
       let isSomeRecord =
            function 
-                | SomeRecord _ -> true
-                | NoRecord -> false
+                | SomeRow _ -> true
+                | NoRow -> false
 
-      [<CompiledName("IsNoRecord")>]      
+      [<CompiledName("IsNoRow")>]      
       let isNoRecord =
            function 
-                | SomeRecord _ -> false
-                | NoRecord -> true
+                | SomeRow _ -> false
+                | NoRow -> true
 
 
       [<CompiledName("ToOption")>]        
       let toOption<'T when 'T :> FlatRow> (maybeRec: MaybeRow<'T>) : Option<'T> =
             match maybeRec with 
-                | SomeRecord x -> Some(x)
-                | NoRecord -> None
+                | SomeRow x -> Some(x)
+                | NoRow -> None
         
       [<CompiledName("OfOption")>]        
       let ofOption (opt:#FlatRow option) =
             match opt with  
-                | Some x -> SomeRecord(x)
-                | None -> NoRecord       
+                | Some x -> SomeRow(x)
+                | None -> NoRow       
                   
 module MetaDataHelper =   
     [<Extension;Sealed;AbstractClass>] 
