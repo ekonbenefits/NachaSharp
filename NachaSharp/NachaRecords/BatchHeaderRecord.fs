@@ -7,8 +7,34 @@ open FSharp.Data.FlatFileMeta
 type BatchHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "5")
     
-     static member Create() = createRow {
+     static member Create(
+                            serviceClassCode:string,
+                            companyName:string,
+                            companyIdentification:string,
+                            secCode:string,
+                            companyEntryDesc:string,
+                            effectiveEntryDate: DateTime,
+                            originatorStatusCode:string,
+                            originatingDfiIdent:string,
+                            batchNum:int,
+                            ?companyDescretionaryData:string,
+                            ?companyDescriptiveDate:DateTime
+                         ) =
+        createRow {
             let! bh = BatchHeaderRecord
+            
+            bh.ServiceClassCode <- serviceClassCode
+            bh.CompanyName <- companyName
+            bh.CompanyIdentification <- companyIdentification
+            bh.StandardEntryClass <- secCode
+            bh.CompanyEntryDescription <- companyEntryDesc
+            bh.EffectiveEntryDate <- effectiveEntryDate
+            bh.OriginatorStatusCode <- originatorStatusCode
+            bh.OriginatingDfiIndentifications <- originatingDfiIdent
+            bh.BatchNumber <- batchNum
+            bh.CompanyDiscretionaryData <- defaultArg companyDescretionaryData ""
+            bh.CompanyDescriptiveDate <- companyDescriptiveDate |> Option.toNullable
+            
             bh.BatchControl <- SomeRow <| BatchControlRecord.Create()
             return bh
         }

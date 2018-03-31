@@ -7,14 +7,43 @@ open FSharp.Data.FlatFileMeta
 type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")
      
-    static member Create() = createRow {
+    static member Create(
+                         immediateDest:string,
+                         immediateOrigin:string,
+                         fileIDModifier:string,
+                         ?immediateDestName: string,
+                         ?immediateOriginName: string,
+                         ?referenceCode:string
+                         ) = 
+        createRow {
             let! fh = FileHeaderRecord
+            
+            fh.ImmediateDestination <- immediateDest
+            fh.ImmediateOrigin <- immediateOrigin
+            fh.FileIDModifier <- fileIDModifier
+            fh.ImmediateDestinationName <- defaultArg immediateDestName ""
+            fh.ImmediateOriginName <- defaultArg immediateOriginName ""
+            fh.ReferenceCode <- defaultArg referenceCode ""
+            
             fh.FileControl <- SomeRow <| FileControlRecord.Create()
             return fh
         }
-    
+        
+    override this.PostSetup() =
+        base.PostSetup()
+        if this.IsNew() then
+           this.PriorityCode <- 1
+           let now = DateTime.Now
+           this.FileCreationDate <- now
+           this.FileCreationTime <- Nullable(now)
+           this.RecordSize <- 94
+           this.BlockingFactor <- 10
+           this.FormatCode <- "1"
+           
+           
     member this.Batches 
         with get () = this.GetChildList<BatchHeaderRecord>()
+        
     member this.FileControl 
         with get () = this.GetChild<FileControlRecord>(lazy NoRow)
         and set value = this.SetChild<FileControlRecord>(value)
@@ -32,16 +61,16 @@ type FileHeaderRecord(rowInput) =
                      columns =[
                                 MetaColumn.Make( 1, this.RecordTypeCode,     Format.leftPadString)
                                 MetaColumn.Make( 2, this.PriorityCode,       Format.zerodInt)
-                                MetaColumn.Make(10, this.IntermediateDestination, Format.leftPadString)
-                                MetaColumn.Make(10, this.IntermediateOrigin, Format.leftPadString)
+                                MetaColumn.Make(10, this.ImmediateDestination, Format.leftPadString)
+                                MetaColumn.Make(10, this.ImmediateOrigin, Format.leftPadString)
                                 MetaColumn.Make( 6, this.FileCreationDate,   Format.reqYYMMDD)
                                 MetaColumn.Make( 4, this.FileCreationTime,   Format.optHHMM)
                                 MetaColumn.Make( 1, this.FileIDModifier,     Format.rightPadString)
                                 MetaColumn.Make( 3, this.RecordSize,         Format.zerodInt)
                                 MetaColumn.Make( 2, this.BlockingFactor,     Format.zerodInt)
                                 MetaColumn.Make( 1, this.FormatCode,         Format.leftPadString)
-                                MetaColumn.Make(23, this.IntermediateDestinationName, Format.rightPadString)
-                                MetaColumn.Make(23, this.IntermediateOriginName, Format.rightPadString)
+                                MetaColumn.Make(23, this.ImmediateDestinationName, Format.rightPadString)
+                                MetaColumn.Make(23, this.ImmediateOriginName, Format.rightPadString)
                                 MetaColumn.Make( 8, this.ReferenceCode,      Format.rightPadString)
                               ]
                      length = 94
@@ -51,11 +80,11 @@ type FileHeaderRecord(rowInput) =
         with get () = this.GetColumn()
         and set value = this.SetColumn<int> value
         
-    member this.IntermediateDestination
+    member this.ImmediateDestination
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
             
-    member this.IntermediateOrigin
+    member this.ImmediateOrigin
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
               
@@ -83,11 +112,11 @@ type FileHeaderRecord(rowInput) =
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
         
-    member this.IntermediateDestinationName
+    member this.ImmediateDestinationName
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
     
-    member this.IntermediateOriginName
+    member this.ImmediateOriginName
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
 
