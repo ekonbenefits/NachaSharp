@@ -64,10 +64,10 @@ type FlatRow(rowData:string) =
     
     let children = Dictionary<string,obj>()
     
-    member val Parent: FlatRow MaybeRecord = NoRecord with get,set
+    member val Parent: FlatRow MaybeRow = NoRecord with get,set
     
-    member this.Root:FlatRow MaybeRecord = 
-            let rec findRoot (f:FlatRow MaybeRecord) =
+    member this.Root:FlatRow MaybeRow = 
+            let rec findRoot (f:FlatRow MaybeRow) =
                 match f with 
                     | NoRecord -> f
                     | SomeRecord(p) -> findRoot p.Parent
@@ -164,7 +164,7 @@ type FlatRow(rowData:string) =
                     | ______ -> let d = defaultValue.Force()
                                 children.Add(key, d)
                                 d
-    member this.GetChild(defaultValue:#FlatRow MaybeRecord Lazy, [<CallerMemberName>] ?memberName: string) : #FlatRow MaybeRecord= 
+    member this.GetChild(defaultValue:#FlatRow MaybeRow Lazy, [<CallerMemberName>] ?memberName: string) : #FlatRow MaybeRow= 
             let key = 
                 memberName
                    |> Option.defaultWith Helper.raiseMissingCompilerMemberName
@@ -176,7 +176,7 @@ type FlatRow(rowData:string) =
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
                 this.HelperGetChild(lazy upcast ChildList(this)) key   
                                    
-    member this.SetChild(value:#FlatRow MaybeRecord, [<CallerMemberName>] ?memberName: string) : unit = 
+    member this.SetChild(value:#FlatRow MaybeRow, [<CallerMemberName>] ?memberName: string) : unit = 
                 let key = 
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
@@ -221,7 +221,7 @@ type FlatRow(rowData:string) =
         this.Changed()
  
  
-type MaybeRecord<'T when 'T :> FlatRow> =
+type MaybeRow<'T when 'T :> FlatRow> =
     SomeRecord of 'T | NoRecord
     
 [<RequireQualifiedAccess>]
@@ -241,7 +241,7 @@ module MaybeRow =
 
 
       [<CompiledName("ToOption")>]        
-      let toOption<'T when 'T :> FlatRow> (maybeRec: MaybeRecord<'T>) : Option<'T> =
+      let toOption<'T when 'T :> FlatRow> (maybeRec: MaybeRow<'T>) : Option<'T> =
             match maybeRec with 
                 | SomeRecord x -> Some(x)
                 | NoRecord -> None
@@ -263,10 +263,10 @@ module MetaDataHelper =
                             record |> init
                             record
 
-    let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRecord Async) = 
+    let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRow Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
             
-    let asyncParseFile (parser:string AsyncSeq -> #FlatRow MaybeRecord Async) (stream:Stream) =
+    let asyncParseFile (parser:string AsyncSeq -> #FlatRow MaybeRow Async) (stream:Stream) =
         let seq = asyncSeq{
                         use streamReader = new StreamReader(stream)
                         let mutable completed = false

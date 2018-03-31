@@ -108,9 +108,9 @@ module rec NachaFile =
       
     type internal ParseState =
         {
-            head:FileHeaderRecord MaybeRecord
-            batch:BatchHeaderRecord MaybeRecord
-            entry:EntryDetail MaybeRecord
+            head:FileHeaderRecord MaybeRow
+            batch:BatchHeaderRecord MaybeRow
+            entry:EntryDetail MaybeRow
             addenda:int
             finished: bool
             lineNo:int
