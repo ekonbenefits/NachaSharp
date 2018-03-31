@@ -345,9 +345,6 @@ module MetaDataHelper =
             Some(result)
         else
             None
-            
-    let isMissingRecordButHasString record data  =
-        record |> MaybeRow.isNoRecord && data |> Option.isSome
            
     let multiMatch (matchers:(int -> string -> #FlatRow option) list) lineNo value =
         matchers
