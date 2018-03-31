@@ -2,10 +2,18 @@ namespace FSharp.Data.FlatFileMeta
 
 open System
 open FSharp.Interop.Compose.System
+open System.Runtime.CompilerServices
 
 module Format =
 
     type FormatPairs<'T> = (string -> 'T) * (int -> 'T -> string)
+
+    module Valid =
+        let checkFinal length (value:string) =
+            if length <> value.Length then
+                invalidOp (sprintf "'%s' is '%i' long, which is longer than field of '%i'."
+                                value value.Length length)
+            value
 
     module Str =
         let fillToLengthWith char length =  Array.init length (fun _ -> char) |> String
@@ -13,9 +21,15 @@ module Format =
         
     
         let getRightTrim = String.trimEnd [|' '|]
-        let setRightPad length = String.Full.padRight length ' '
+        let setRightPad length value  = 
+                value
+                    |> String.Full.padRight length ' '
+                    |> Valid.checkFinal length
         let getLeftTrim = String.trimStart [|' '|]
-        let setLeftPad length = String.Full.padLeft length ' '
+        let setLeftPad length value =
+                value
+                    |> String.Full.padLeft length ' '  
+                    |> Valid.checkFinal length
         
     module Int =
         let getReq (value:string) = value |> int
@@ -29,7 +43,7 @@ module Format =
             value 
                 |> string 
                 |> String.Full.padLeft length '0'
-                |> String.Full.substring 0 length
+                |> Valid.checkFinal length
         
         let setOptZerod length (value: int Nullable) =
             match value |> Option.ofNullable with
@@ -53,7 +67,11 @@ module Format =
     module DateAndTime =
         open System.Globalization
         let parseReq format value = DateTime.ParseExact(value, format, CultureInfo.InvariantCulture)
-        let toStringReq format (_:int) (value:DateTime) = value.ToString(format, CultureInfo.InvariantCulture)     
+        
+        let toStringReq format (length:int) (value:DateTime) = 
+            value.ToString(format, CultureInfo.InvariantCulture) 
+            |> Valid.checkFinal length
+            
         let parseOpt (format:string) (value:string) = 
                     match DateTime.TryParseExact(value, 
                                                  format,

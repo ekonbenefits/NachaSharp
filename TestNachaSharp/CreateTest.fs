@@ -1,12 +1,9 @@
 module CreateTest
 
-open FSharp.Data.FlatFileMeta
 open NachaSharp
 open Xunit
 open FsUnit.Xunit
 open System
-open System.IO
-open System.Collections.Generic
 
 [<Fact>]
 let ``Create Blank FileHeaderRecord`` () =
