@@ -10,6 +10,62 @@ open System
 open FSharp.Interop.Compose.Linq
 
 
+type MaybeRow<'T when 'T :> FlatRow> =
+    SomeRow of 'T | NoRow
+   
+[<AutoOpen>]
+module MaybeRowExtension =
+    type MaybeRowBuilder() =
+        member __.Bind(m, f) = 
+            Option.bind f m
+
+        member __.Bind(m, f) = 
+            match m with
+                | SomeRow(r) -> f r
+                | NoRow -> None
+
+        member __.Return(x) = Some x
+
+        member __.ReturnFrom(x) = x
+
+        member __.Yield(x) = Some x
+
+        member __.YieldFrom(x) = x
+        
+        member this.Zero() = this.Return ()
+   
+        member __.Delay(f) = f
+
+        member __.Run(f) = f()
+
+        member this.While(guard, body) =
+            if not (guard()) 
+            then this.Zero() 
+            else this.Bind( body(), fun () -> 
+                this.While(guard, body))  
+
+        member this.TryWith(body, handler) =
+            try this.ReturnFrom(body())
+            with e -> handler e
+
+        member this.TryFinally(body, compensation) =
+            try this.ReturnFrom(body())
+            finally compensation() 
+
+        member this.Using(disposable:#System.IDisposable, body) =
+            let body' = fun () -> body disposable
+            this.TryFinally(body', fun () -> 
+                match disposable with 
+                    | null -> () 
+                    | disp -> disp.Dispose())
+
+        member this.For(sequence:seq<_>, body) =
+            this.Using(sequence.GetEnumerator(),fun enum -> 
+                this.While(enum.MoveNext, 
+                    this.Delay(fun () -> body enum.Current)))
+
+    let maybeRow = new MaybeRowBuilder()       
+
 
 type ColumnIdentifier(key: string, length:int, placeHolder:bool) =
     member __.Key = key
@@ -51,7 +107,36 @@ type internal ChildList<'T when 'T :> FlatRow>(parent:FlatRow) =
         base.SetItem(index, item)
         if item.HelperGetAllowMutation () then
             item.Parent |> MaybeRow.toOption |> Option.iter (fun x -> x.Changed())
+
+
+[<RequireQualifiedAccess>]
+module MaybeRow =
+
+      [<CompiledName("IsSomeRow")>]      
+      let isSomeRecord =
+           function 
+                | SomeRow _ -> true
+                | NoRow -> false
+
+      [<CompiledName("IsNoRow")>]      
+      let isNoRecord =
+           function 
+                | SomeRow _ -> false
+                | NoRow -> true
+
+
+      [<CompiledName("ToOption")>]        
+      let toOption<'T when 'T :> FlatRow> (maybeRec: MaybeRow<'T>) : Option<'T> =
+            match maybeRec with 
+                | SomeRow x -> Some(x)
+                | NoRow -> None
         
+      [<CompiledName("OfOption")>]        
+      let ofOption (opt:#FlatRow option) =
+            match opt with  
+                | Some x -> SomeRow(x)
+                | None -> NoRow       
+                       
 [<AbstractClass>]
 type FlatRow(rowData:string) =
     
@@ -153,11 +238,10 @@ type FlatRow(rowData:string) =
         struct (start, columnIdent.Length)
           
     member internal this.HelperGetAllowMutation () =
-        this.Root 
-            |> MaybeRow.toOption
-            |> Option.map (fun x -> x.AllowMutation)
-            |> Option.defaultValue this.AllowMutation
-
+        maybeRow { let! root = this.Root
+                   return root.AllowMutation
+                 } |> Option.defaultValue this.AllowMutation
+     
     member private __.HelperGetChild (defaultValue:'T Lazy) (key:string) =
                 match children.TryGetValue(key) with
                     | true,v -> downcast v
@@ -165,15 +249,13 @@ type FlatRow(rowData:string) =
                                 children.Add(key, d)
                                 d
     member this.GetChild(defaultValue:#FlatRow MaybeRow Lazy, [<CallerMemberName>] ?memberName: string) : #FlatRow MaybeRow= 
-            let key = 
-                memberName
-                   |> Option.defaultWith Helper.raiseMissingCompilerMemberName
+            let key =  memberName
+                       |> Option.defaultWith Helper.raiseMissingCompilerMemberName
             this.HelperGetChild defaultValue key
             
     member this.GetChildList([<CallerMemberName>] ?memberName: string) : #FlatRow IList = 
-                let key = 
-                    memberName
-                       |> Option.defaultWith Helper.raiseMissingCompilerMemberName
+                let key =  memberName
+                           |> Option.defaultWith Helper.raiseMissingCompilerMemberName
                 this.HelperGetChild(lazy upcast ChildList(this)) key   
                                    
     member this.SetChild(value:#FlatRow MaybeRow, [<CallerMemberName>] ?memberName: string) : unit = 
@@ -221,37 +303,8 @@ type FlatRow(rowData:string) =
         this.Changed()
  
  
-type MaybeRow<'T when 'T :> FlatRow> =
-    SomeRow of 'T | NoRow
-    
-[<RequireQualifiedAccess>]
-module MaybeRow =
+       
 
-      [<CompiledName("IsSomeRow")>]      
-      let isSomeRecord =
-           function 
-                | SomeRow _ -> true
-                | NoRow -> false
-
-      [<CompiledName("IsNoRow")>]      
-      let isNoRecord =
-           function 
-                | SomeRow _ -> false
-                | NoRow -> true
-
-
-      [<CompiledName("ToOption")>]        
-      let toOption<'T when 'T :> FlatRow> (maybeRec: MaybeRow<'T>) : Option<'T> =
-            match maybeRec with 
-                | SomeRow x -> Some(x)
-                | NoRow -> None
-        
-      [<CompiledName("OfOption")>]        
-      let ofOption (opt:#FlatRow option) =
-            match opt with  
-                | Some x -> SomeRow(x)
-                | None -> NoRow       
-                  
 module MetaDataHelper =   
     [<Extension;Sealed;AbstractClass>] 
     type Cache<'T when 'T :> FlatRow> ()=
