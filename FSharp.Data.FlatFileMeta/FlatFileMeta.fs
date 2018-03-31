@@ -272,7 +272,7 @@ type FlatRow(rowData:string) =
                 let key = 
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
-                children.Add(key, value)
+                children.[key] <- value
                 if this.HelperGetAllowMutation () then
                     this.Changed()
             
