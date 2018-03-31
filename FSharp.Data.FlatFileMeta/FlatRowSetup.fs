@@ -10,7 +10,7 @@ open FSharp.Interop.Compose.Linq
 module FlatRowProvider =   
     [<Extension;Sealed;AbstractClass>] 
     type Cache<'T when 'T :> FlatRow> ()=
-        static member val MetaData: ParsedMeta option = Option.None with get,set
+        static member val MetaData: ProcessedMeta option = Option.None with get,set
 
     let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRow Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
@@ -48,7 +48,7 @@ module FlatRowProvider =
             |> List.tryFind (fun x->x.IsSome)
             |> Option.flatten
 
-    let setup<'T when 'T :> FlatRow>  (_:'T) (v: DefinedMeta Lazy) : ParsedMeta = 
+    let setup<'T when 'T :> FlatRow>  (_:'T) (v: DefinedMeta Lazy) : ProcessedMeta = 
         match Cache<'T>.MetaData with
             | Some(md) -> md
             | None ->

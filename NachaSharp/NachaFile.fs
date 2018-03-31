@@ -29,24 +29,21 @@ module rec NachaFile =
     let internal foldingParse (state:ParseState) lineOftext =
             if state.finished then
                 state
-            else            
+            else
+                //possible actions            
                 let next = state.lineNo + 1
                 let errored = {state with head = NoRow; finished = true}
-
                 let foundFileHeader fh = {state with head = SomeRow(fh); lineNo = next}
-
                 let foundBatchHeader bh = 
                     maybeRow { let! head = state.head
                                head.Batches.Add(bh)
                              } |> ignore
                     {state with batch = SomeRow(bh); lineNo = next}
-                    
                 let foundFileControl fc = 
                     maybeRow { let! head = state.head
                                head.FileControl<- SomeRow(fc)
                              } |> ignore
                     {state with finished = true}
-
                 let foundEntryDetail (ed:EntryDetail) = 
                     maybeRow { let! batch = state.batch
                                batch.Entries.Add(ed)
@@ -55,7 +52,6 @@ module rec NachaFile =
                         entry = SomeRow(ed)
                         addenda = ed.AddendaRecordedIndicator
                         lineNo = next }
-                        
                 let foundBatchControl bc = 
                     maybeRow { let! batch = state.batch
                                batch.BatchControl <- SomeRow(bc)
@@ -65,13 +61,13 @@ module rec NachaFile =
                             entry = NoRow
                             addenda = 0
                             lineNo = next }
-
                 let foundEntryAddenda add = 
                     maybeRow { let! ed = state.entry
                                ed.Addenda.Add(add)
                              } |> ignore
                     { state with addenda= 2; lineNo = next}
-               
+                
+                //Walk the file
                 match (state.head, state.batch) with
                     | NoRow, _ ->
                          match lineOftext with

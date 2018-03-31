@@ -98,7 +98,7 @@ type MetaColumn =
     static member PlaceHolder(length) =
         ColumnIdentifier("", length, true)
 
-type ParsedMeta = int * string IList * IDictionary<string, int * ColumnIdentifier>
+type ProcessedMeta = int * string IList * IDictionary<string, int * ColumnIdentifier>
 
 type DefinedMeta = { columns: ColumnIdentifier list; length :int }
 
@@ -174,7 +174,7 @@ type FlatRow(rowData:string) =
                      
     member __.IsNew() = rowInput.IsNone
 
-    abstract Setup: unit -> ParsedMeta
+    abstract Setup: unit -> ProcessedMeta
     
     abstract PostSetup: unit -> unit
     
