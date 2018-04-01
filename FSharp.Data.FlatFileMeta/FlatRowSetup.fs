@@ -5,6 +5,9 @@ open System.Runtime.CompilerServices
 open System.IO
 open System.Collections.Generic
 open FSharp.Interop.Compose.Linq
+open System
+open Microsoft.FSharp.Quotations
+open Microsoft.FSharp.Quotations.Patterns
 
 [<RequireQualifiedAccess>]
 module FlatRowProvider =   
@@ -74,4 +77,47 @@ module FlatRowProvider =
                     result      
                 with
                     | ex -> raise <| InvalidDataException("Columns must have unique names", ex)
-                    
+
+
+
+[<AutoOpen>]
+module setupExtensions =
+
+    type MetaColumn =
+        static member Make<'T>(length, [<ReflectedDefinition>] value:Expr<'T> , (getValue: string -> 'T, setValue)) =
+            
+            let key = 
+                match value with
+                | PropertyGet(_, propOrValInfo, _) -> propOrValInfo.Name
+                | ________________________________ -> invalidArg "value" "Must be a property get"
+            Column(key, length, getValue, setValue)
+    
+        static member PlaceHolder(length) =
+            ColumnIdentifier("", length, true)
+    
+    type SetupMetaBuilder(fr) = 
+        member __.Yield(x) = {columns = [];length =0}
+        
+        member __.Delay(x) = lazy (x())
+        
+        member __.Run(x) =
+            FlatRowProvider.setup fr x
+                
+        [<CustomOperation("checkLength")>] 
+        member __.CheckLength (meta, x) = {meta with length = x }
+    
+        [<CustomOperation("placeholder")>] 
+        member __.Placeholder (meta, length) =
+           { meta with columns = meta.columns @ [ColumnIdentifier("", length, true)]}
+
+    
+        [<CustomOperation("columns")>] 
+        member __.Columns (meta : DefinedMeta, length, [<ReflectedDefinition>] value:Expr<'T> , (getValue: string -> 'T, setValue)) = 
+           let key = 
+                match value with
+                | PropertyGet(_, propOrValInfo, _) -> propOrValInfo.Name
+                | ________________________________ -> invalidArg "value" "Must be a property get"
+            
+           { meta with columns = meta.columns @ [Column(key, length, getValue, setValue)]}
+           
+    let setupMetaFor (fr) = SetupMetaBuilder(fr)

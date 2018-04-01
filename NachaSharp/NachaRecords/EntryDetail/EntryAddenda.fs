@@ -8,12 +8,9 @@ type EntryAddenda(rowInput) =
 
 type EntryAddendaWildCard(rowInput) =
     inherit EntryAddenda(rowInput)
-    override this.Setup () = 
-        FlatRowProvider.setup this <|
-                lazy ({ 
-                         columns =[
-                                    MetaColumn.Make(1, this.RecordTypeCode, Format.leftPadString)
-                                    MetaColumn.PlaceHolder(93)
-                                  ]
-                         length = 94
-                     })
+    override this.Setup () = setupMetaFor this {
+            columns 1 this.RecordTypeCode Format.leftPadString
+            placeholder 93
+            checkLength 94
+        }
+     

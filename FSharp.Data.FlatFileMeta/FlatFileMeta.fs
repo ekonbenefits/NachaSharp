@@ -1,7 +1,5 @@
 namespace rec FSharp.Data.FlatFileMeta
 
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.Patterns
 open System.Collections.Generic
 open System.IO
 open System
@@ -85,18 +83,6 @@ type Column<'T>(key: string, length:int, getValue: string -> 'T, setValue: int -
     member __.GetValue = getValue
     member __.SetValue = setValue
 
-
-type MetaColumn =
-    static member Make<'T>(length, [<ReflectedDefinition>] value:Expr<'T> , (getValue: string -> 'T, setValue)) =
-        
-        let key = 
-            match value with
-            | PropertyGet(_, propOrValInfo, _) -> propOrValInfo.Name
-            | ________________________________ -> invalidArg "value" "Must be a property get"
-        Column(key, length, getValue, setValue)
-
-    static member PlaceHolder(length) =
-        ColumnIdentifier("", length, true)
 
 type ProcessedMeta = int * string IList * IDictionary<string, int * ColumnIdentifier>
 

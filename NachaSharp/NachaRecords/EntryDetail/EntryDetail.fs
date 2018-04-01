@@ -100,24 +100,23 @@ type EntryPPD(batchSEC, rowInput) =
             return! EntryPPD.Construct
     }
     
-    override this.Setup () = 
-        FlatRowProvider.setup this <|
-                lazy ({ 
-                         columns =[ 
-                                        MetaColumn.Make( 1, this.RecordTypeCode, Format.leftPadString)
-                                        MetaColumn.Make( 2, this.TransactionCode, Format.leftPadString)
-                                        MetaColumn.Make( 8, this.ReceivingDfiIdentification, Format.leftPadString)
-                                        MetaColumn.Make( 1, this.CheckDigit, Format.zerodInt)
-                                        MetaColumn.Make(17, this.DfiAccountNUmber, Format.leftPadString)
-                                        MetaColumn.Make(10, this.Amount, Format.reqMoney)
-                                        MetaColumn.Make(15, this.IndividualIdentificationNumber, Format.leftPadString)
-                                        MetaColumn.Make(22, this.IndividualName, Format.leftPadString)
-                                        MetaColumn.Make( 2, this.DiscretionaryData, Format.rightPadString)
-                                        MetaColumn.Make( 1, this.AddendaRecordedIndicator, Format.zerodInt)
-                                        MetaColumn.Make(15, this.TraceNumber, Format.leftPadString)
-                              ]
-                         length = 94
-                     })
+    override this.Setup () = setupMetaFor this {
+    
+                 columns  1 this.RecordTypeCode Format.leftPadString
+                 columns  2 this.TransactionCode Format.leftPadString
+                 columns  8 this.ReceivingDfiIdentification Format.leftPadString
+                 columns  1 this.CheckDigit Format.zerodInt
+                 columns 17 this.DfiAccountNUmber Format.leftPadString
+                 columns 10 this.Amount Format.reqMoney
+                 columns 15 this.IndividualIdentificationNumber Format.leftPadString
+                 columns 22 this.IndividualName Format.leftPadString
+                 columns  2 this.DiscretionaryData Format.rightPadString
+                 columns  1 this.AddendaRecordedIndicator Format.zerodInt
+                 columns 15 this.TraceNumber Format.leftPadString
+                 
+                 checkLength 94
+        }
+  
     member this.TransactionCode
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value
