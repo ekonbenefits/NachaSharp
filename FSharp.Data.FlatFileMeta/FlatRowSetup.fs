@@ -106,11 +106,12 @@ module setupExtensions =
         [<CustomOperation("checkLength")>] 
         member __.CheckLength (meta, x) = {meta with length = x }
     
+        /// Defines width of data to ignore
         [<CustomOperation("placeholder")>] 
         member __.Placeholder (meta, length) =
            { meta with columns = meta.columns @ [ColumnIdentifier("", length, true)]}
 
-    
+        /// Defines width of property and how to format.
         [<CustomOperation("columns")>] 
         member __.Columns (meta : DefinedMeta, length, [<ReflectedDefinition>] value:Expr<'T> , (getValue: string -> 'T, setValue)) = 
            let key = 
