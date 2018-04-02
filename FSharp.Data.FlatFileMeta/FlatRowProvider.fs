@@ -14,6 +14,44 @@ module FlatRowProvider =
     open System.Text
     open System.Collections.Concurrent
 
+
+    type internal WriteState = { node: FlatRow; accum: FlatRow list }
+    
+    let asyncWriteFile (head:#FlatRow) (stream:Stream) =
+        
+        let rec foldFlat (state:List<FlatRow>) (item:FlatRow) =
+            state.Add(item)
+            for key in item.ChildKeys() do
+                match item.ChildData(key) with
+                    | Other(_) -> ()
+                    | Children (l) ->
+                        l |> Enumerable.ofType<FlatRow> 
+                          |> Seq.fold foldFlat state 
+                          |> ignore
+                    | Child (mc) -> match mc with
+                                    | NoRow -> ()
+                                    | SomeRow(c) -> foldFlat state c |> ignore
+                    
+            state
+            
+        let flatList = foldFlat (List()) head
+     
+        use writer = new StreamWriter(stream,
+                                              Encoding.ASCII,
+                                              1024, 
+                                              true)
+     
+        flatList 
+            |> AsyncSeq.ofSeq
+            |> AsyncSeq.iterAsync(fun row -> async {
+                                                        do! row.ToRawString() 
+                                                            |> writer.WriteLineAsync 
+                                                            |> Async.AwaitTask
+                                                   })
+
+    let syncWriteFile (head:#FlatRow) (stream:Stream)  = 
+         asyncWriteFile head stream |> Async.RunSynchronously
+
     let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRow Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
             
