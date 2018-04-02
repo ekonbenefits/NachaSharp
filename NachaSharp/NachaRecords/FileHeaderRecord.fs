@@ -42,11 +42,11 @@ type FileHeaderRecord(rowInput) =
            
            
     member this.Batches 
-        with get () = this.GetChildList<BatchHeaderRecord>()
+        with get () = this.GetChildList<BatchHeaderRecord>(1)
         
     member this.FileControl 
-        with get () = this.GetChild<FileControlRecord>(lazy NoRow)
-        and set value = this.SetChild<FileControlRecord>(value)
+        with get () = this.GetChild<FileControlRecord>(2)
+        and set value = this.SetChild<FileControlRecord>(2,value)
         
     override this.Calculate () =
          base.Calculate()

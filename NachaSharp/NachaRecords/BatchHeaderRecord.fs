@@ -63,11 +63,11 @@ type BatchHeaderRecord(rowInput) =
         }
 
     member this.Entries 
-        with get () = this.GetChildList<EntryDetail>()
+        with get () = this.GetChildList<EntryDetail>(1)
         
     member this.BatchControl 
-        with get () = this.GetChild<BatchControlRecord>(lazy NoRow)
-        and set value = this.SetChild<BatchControlRecord>(value)
+        with get () = this.GetChild<BatchControlRecord>(2)
+        and set value = this.SetChild<BatchControlRecord>(2,value)
         
     override this.Calculate () =
                  base.Calculate()

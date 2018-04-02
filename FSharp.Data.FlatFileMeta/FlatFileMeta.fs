@@ -3,6 +3,7 @@ namespace rec FSharp.Data.FlatFileMeta
 open System.Collections.Generic
 open System.IO
 open System
+open System.ComponentModel
 open System.Runtime.CompilerServices
 open FSharp.Interop.Compose.Linq
 
@@ -110,6 +111,18 @@ type internal ChildList<'T when 'T :> FlatRow>(parent:FlatRow) =
 [<RequireQualifiedAccess>]
 module MaybeRow =
 
+      [<CompiledName("Cast")>]  
+      let cast (m:MaybeRow<FlatRow>) : MaybeRow<#FlatRow> =
+           match m with
+              | SomeRow(r) -> SomeRow(downcast r)
+              | NoRow -> NoRow
+       
+      [<CompiledName("Cast")>]  
+      let generalize (m:MaybeRow<#FlatRow>) : MaybeRow<FlatRow> =
+         match m with
+            | SomeRow(r) -> SomeRow(upcast r)
+            | NoRow -> NoRow
+              
       [<CompiledName("IsSomeRow")>]      
       let isSomeRecord =
            function 
@@ -134,7 +147,16 @@ module MaybeRow =
             match opt with  
                 | Some x -> SomeRow(x)
                 | None -> NoRow       
-                       
+          
+
+                     
+ type Hierarchy = 
+       Child of (FlatRow MaybeRow)
+       | Children of (System.Collections.IEnumerable)
+       | Other of (obj)
+    
+ type RankedHierarchy = Ranked of int * Hierarchy
+      
 [<AbstractClass>]
 type FlatRow(rowData:string) =
     let rowInput = Helper.optionOfStringEmpty rowData
@@ -143,7 +165,7 @@ type FlatRow(rowData:string) =
     let mutable columnMap: IDictionary<string, int * ColumnIdentifier> = upcast Map.empty 
     let mutable columnLength: int = 0
     
-    let children = Dictionary<string,obj>()
+    let children = Dictionary<string,RankedHierarchy>()
     
     member val Parent: FlatRow MaybeRow = NoRow with get,set
     
@@ -170,9 +192,13 @@ type FlatRow(rowData:string) =
         if not <| this.HelperGetAllowMutation ()  then
             invalidOp "AllowMutation is not set on root"
             
-        children.Values
-            |> Seq.iter (function | :? FlatRow as f -> f.Calculate()
-                                  | :? System.Collections.IEnumerable as l -> 
+        children.Keys
+            |> Seq.map this.ChildData
+            |> Seq.iter (function | Child(mf) -> maybeRow {
+                                                                let! f = mf
+                                                                f.Calculate()
+                                                            } |> ignore
+                                  | Children (l) -> 
                                         l |> Enumerable.ofType<FlatRow>
                                           |> Seq.iter (fun i->i.Calculate())
                                   | _ ->())
@@ -201,15 +227,17 @@ type FlatRow(rowData:string) =
 
        
     member __.ChildKeys() =
-        children.Keys
+        children 
+            |> Seq.sortBy (fun kp -> match kp.Value with |Ranked(r,_)->r) 
+            |> Seq.map (fun kp -> kp.Key)
         
-    member __.ChildData(key:string):obj=
-        children.[key]
-                
-                
+    member __.ChildData(key:string):Hierarchy=
+        children.[key] |> (function | Ranked(_,h) -> h)
+     
     member this.Keys() =
         this.LazySetup()
         columnKeys   
+        
     member private this.Row =
         this.LazySetup()
         rawData
@@ -238,30 +266,56 @@ type FlatRow(rowData:string) =
                    return root.AllowMutation
                  } |> Option.defaultValue this.AllowMutation
      
-    member private __.HelperGetChild (defaultValue:'T Lazy) (key:string) =
+    member private __.HelperGetChild<'T when 'T :> FlatRow> (rank:int) (key:string) : MaybeRow<'T> =
                 match children.TryGetValue(key) with
-                    | true,v -> downcast v
-                    | ______ -> let d = defaultValue.Force()
-                                children.Add(key, d)
-                                d
-    member this.GetChild(defaultValue:#FlatRow MaybeRow Lazy, [<CallerMemberName>] ?memberName: string) : #FlatRow MaybeRow= 
+                    | true,Ranked(_,Child(mv)) -> mv |> MaybeRow.cast
+                    | true,_ -> invalidOp "Different type for this name already added"
+                    | ______ -> let d = Child(NoRow)
+                                children.[key] <- Ranked(rank, d)
+                                NoRow
+                                
+    member private __.HelperGetOther (rank:int) (defaultValue:'T Lazy) (key:string) =
+                    match children.TryGetValue(key) with
+                        | true,Ranked(_,Other(v)) -> downcast v
+                        | true,_ -> invalidOp "Different type for this name already added"
+                        | ______ -> let d = defaultValue.Force()
+                                    children.[key] <- Ranked(rank, Other(rank, box d))
+                                    d
+                                
+    member private this.HelperGetChildren<'T when 'T :> FlatRow> (rank:int) (key:string) : 'T IList  =
+              match children.TryGetValue(key) with
+                  | true,Ranked(_,Children(v)) -> downcast v
+                  | true,_ -> invalidOp "Different type for this name already added"
+                  | ______ -> let d: 'T IList = upcast ChildList<'T>(this)
+                              let h = Children(d)
+                              children.[key] <- Ranked(rank,h)
+                              d                      
+                                
+    member this.GetChild(rank:int, [<CallerMemberName>] ?memberName: string) : #FlatRow MaybeRow= 
             let key =  memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
-            this.HelperGetChild defaultValue key
+            this.HelperGetChild rank key
             
-    member this.GetChildList([<CallerMemberName>] ?memberName: string) : #FlatRow IList = 
+    member this.GetChildList(rank:int,[<CallerMemberName>] ?memberName: string) : #FlatRow IList = 
                 let key =  memberName
                            |> Option.defaultWith Helper.raiseMissingCompilerMemberName
-                this.HelperGetChild(lazy upcast ChildList(this)) key   
+                this.HelperGetChildren rank key   
                                    
-    member this.SetChild(value:#FlatRow MaybeRow, [<CallerMemberName>] ?memberName: string) : unit = 
+    member this.SetChild(rank:int, value:#FlatRow MaybeRow, [<CallerMemberName>] ?memberName: string) : unit = 
                 let key = 
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
-                children.[key] <- value
+                children.[key] <- Ranked(rank,Child(value |> MaybeRow.generalize))
                 if this.HelperGetAllowMutation () then
                     this.Changed()
-            
+         
+    member this.SetOther(rank:int, value:obj, [<CallerMemberName>] ?memberName: string) : unit = 
+               let key = 
+                   memberName
+                      |> Option.defaultWith Helper.raiseMissingCompilerMemberName
+               children.[key] <- Ranked(rank,Other(value))
+               if this.HelperGetAllowMutation () then
+                   this.Changed()
             
     member this.GetColumn([<CallerMemberName>] ?memberName: string) : 'T =
         let start, columnIdent =

@@ -24,7 +24,7 @@ type EntryDetail(batchSEC, rowInput) =
              ()
     
     member this.Addenda 
-        with get () = this.GetChildList<EntryAddenda>()
+        with get () = this.GetChildList<EntryAddenda>(1)
     
     member this.AddendaRecordedIndicator
         with get () = this.GetColumn<int> ()
