@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Helper.fs" />
+    <Compile Include="DataCode.fs" />
     <Compile Include="Format.fs" />
     <Compile Include="FlatFileMeta.fs" />
     <Compile Include="FlatRowProvider.fs" />

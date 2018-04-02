@@ -128,10 +128,18 @@ module Format =
         
         let getOptHHMM = parseOpt "HHmm"
         let setOptHHMM = toStringOpt "HHmm"
-        
+     
+    module Code =
+        let getCode<'T when 'T :> DataCode<'T> and  'T: ( new : unit -> 'T )> value : 'T =
+            DataCode<'T>.Create(value)
+            
+        let setCode<'T when 'T :> DataCode<'T> and  'T: ( new : unit -> 'T )> length (code:'T) =
+            code.ToRawString()
+            |> Valid.checkFinal length
         
     let zerodInt:FormatPairs<_>  = (Int.getReq, Int.setZerod)
 
+    let reqDataCode<'T when 'T :> DataCode<'T> and  'T: ( new : unit -> 'T )> : FormatPairs<'T> = (Code.getCode, Code.setCode)
     let reqMoney:FormatPairs<_> = (Decimal.getReqMoney, Decimal.setReqMoney)
     let rightPadString:FormatPairs<_> = (Str.getRightTrim, Str.setRightPad)
     let leftPadString:FormatPairs<_>  = (Str.getLeftTrim, Str.setLeftPad)

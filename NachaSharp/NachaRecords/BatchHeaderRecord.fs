@@ -95,12 +95,12 @@ type BatchHeaderRecord(rowInput) =
                     
                     bc.TotalCreditEntryAmount <- 
                         this.Entries 
-                            |> Seq.filter(fun x-> match x.TransactionCode with Credit(_) -> true | _-> false)
+                            |> Seq.filter(fun x-> x.TransactionCode.ActionType = Credit)
                             |> Seq.sumBy (fun x-> x.Amount)
                  
                     bc.TotalDebitEntryAmount <- 
                                         this.Entries 
-                                            |> Seq.filter(fun x-> match x.TransactionCode with Debit(_) -> true | _-> false)
+                                            |> Seq.filter(fun x-> x.TransactionCode.ActionType = Debit)
                                             |> Seq.sumBy (fun x-> x.Amount)
                     bc.EntryHash <- 
                         this.Entries

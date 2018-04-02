@@ -21,17 +21,64 @@ open FSharp.Interop.Compose.System
 
 [<AutoOpen>]
 module NachaValues =
-
-    type AccountType = Checking=2 
-                       | Savings=3 
-                       | GeneralLedger=4 
-                       | Loan=5 
-                       | AccountingRecord =8
-                       | Unknown = -1
     
-    type TranCode = Credit of string
-                    | Debit of  string 
-                    | Unknown of string 
+    type TranAccountType = Checking=2 
+                           | Savings=3 
+                           | GeneralLedger=4 
+                           | Loan=5 
+                           | AccountingRecord =8
+                           | Unknown = -1
+    
+    type TranActionType = Credit
+                           | Debit
+                           | Unknown
+    
+    
+    type TranCode() =
+         inherit DataCode<TranCode>()
+    
+         
+         static member CheckingCredit =
+            TranCode.GetCode()
+         
+         static member GeneralLedgerCredit =
+                 TranCode.GetCode()
+         
+         static member SavingsCredit =
+             TranCode.GetCode()
+          
+         static member CheckingDebit =
+             TranCode.GetCode()
+             
+         static member GeneralLedgerDebit =
+             TranCode.GetCode()
+         
+         static member SavingsDebit =
+             TranCode.GetCode()
+    
+    
+         member this.ActionType = 
+                match this.Code.[0],this.Code.[1] with
+                        | '8',_ -> Credit
+                        | _,'1' | _,'2' | _,'3' | _,'4' -> Credit
+                        | _,'6' | _,'7' | _,'8' | _,'9' -> Debit
+                        | _ -> Unknown
+         
+         member this.AccountType = 
+                let success, acc = System.Enum.TryParse(this.Code.[0..0])
+                if success then acc else TranAccountType.Unknown
+         
+         override __.Setup () = DataCodeExtension.dataCodeMeta {
+                code TranCode.CheckingCredit      "22"
+                code TranCode.SavingsCredit       "32"
+                code TranCode.GeneralLedgerCredit "42"
+                code TranCode.CheckingDebit       "27"
+                code TranCode.SavingsDebit        "37"
+                code TranCode.GeneralLedgerDebit  "47"
+          }
+
+
+
 
 [<RequireQualifiedAccess>]
 module NachaFormat =
@@ -46,24 +93,9 @@ module NachaFormat =
                         else
                             0
             str.[start..(str.Length - 1)]
-        
-    module Codes = 
-        let getTranCode (x:string) =
-            let success, acc = System.Enum.TryParse(x.[0..0])
-            let account = if success then acc else AccountType.Unknown
-            match x.[1] with
-                | '1' | '2' | '3' | '4' -> Credit(x)
-                | '6' | '7' | '8' | '9' -> Debit(x)
-                | _ -> Unknown(x)
-        let setTransCode length x =
-            match x with
-                | Credit(s)-> s
-                | Debit(s) -> s
-                | _ -> invalidOp "can only set credit or debit"
-                |> Format.Valid.checkFinal length
      
+    let tranCode = Format.reqDataCode<TranCode>
     let numeric = Format.zerodInt
     let alpha = Format.rightPadString
     let alphaUpper:Format.FormatPairs<_> = (Format.Str.getRightTrim, Str.setUpper)
-    let tranCode:Format.FormatPairs<_> = (Codes.getTranCode, Codes.setTransCode)
     let hash:Format.FormatPairs<_> = (Format.Int.getReq, Int.setRightMost)
