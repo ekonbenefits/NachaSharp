@@ -11,9 +11,6 @@ open Microsoft.FSharp.Quotations.Patterns
 
 [<RequireQualifiedAccess>]
 module FlatRowProvider =   
-    [<Extension;Sealed;AbstractClass>] 
-    type Cache<'T when 'T :> FlatRow> ()=
-        static member val MetaData: ProcessedMeta option = Option.None with get,set
 
     let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRow Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
@@ -53,7 +50,7 @@ module FlatRowProvider =
 
     let internal cache = Dictionary<Type,ProcessedMeta>()
 
-    let setup<'T when 'T :> FlatRow>  (row:#FlatRow) (v: DefinedMeta Lazy) : ProcessedMeta =
+    let setup (row:#FlatRow) (v: DefinedMeta Lazy) : ProcessedMeta =
         let k = row.GetType()
         if cache.ContainsKey(k) then
             cache.[k]
