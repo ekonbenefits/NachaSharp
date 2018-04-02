@@ -22,9 +22,25 @@ type EntryDetail(batchSEC, rowInput) =
         with get () = this.GetColumn<TranCode> ()
         and set value = this.SetColumn<TranCode> value
         
+    member this.CheckDigit
+            with get () = this.GetColumn<int> ()
+            and set value = this.SetColumn<int> value
+            
+    member this.DfiAccountNUmber
+            with get () = this.GetColumn<string> ()
+            and set value = this.SetColumn<string> value 
+            
     member this.Amount
-        with get () = this.GetColumn<decimal> ()
-        and set value = this.SetColumn<decimal> value
+            with get () = this.GetColumn<decimal> ()
+            and set value = this.SetColumn<decimal> value
+        
+    member this.ReceivingDfiIdentification
+                with get () = this.GetColumn ()
+                and set value = this.SetColumn<string> value 
+                
+    member this.TraceNumber
+                with get () = this.GetColumn ()
+                and set value = this.SetColumn<string> value  
 
 type EntryWildCard(batchSEC, rowInput) =
     inherit EntryDetail(batchSEC, rowInput)
@@ -33,11 +49,16 @@ type EntryWildCard(batchSEC, rowInput) =
     override this.Setup () = setupMetaFor this {
                 columns      1      this.RecordTypeCode             NachaFormat.alpha
                 columns      2      this.TransactionCode            NachaFormat.tranCode
-                placeholder 26
+                columns      8      this.ReceivingDfiIdentification Format.leftPadString
+                columns      1      this.CheckDigit                 NachaFormat.numeric
+                columns     17      this.DfiAccountNUmber           Format.leftPadString
                 columns     10      this.Amount                     Format.reqMoney
-                placeholder 39
-                columns      1      this.AddendaRecordedIndicator   NachaFormat.numeric
                 placeholder 15
+                placeholder 22
+                placeholder  2
+                columns      1      this.AddendaRecordedIndicator   NachaFormat.numeric
+                columns     15      this.TraceNumber                NachaFormat.alpha
+                
                 checkLength 94
         }
 
@@ -55,7 +76,7 @@ type EntryCCD(batchSEC, rowInput) =
                 columns  1 this.RecordTypeCode          NachaFormat.alpha
                 columns  2 this.TransactionCode         NachaFormat.tranCode
                 columns  8 this.ReceivingDfiIdentification Format.leftPadString
-                columns  1 this.CheckDigit              Format.zerodInt
+                columns  1 this.CheckDigit              NachaFormat.numeric
                 columns 17 this.DfiAccountNUmber        Format.leftPadString
                 columns 10 this.Amount                  Format.reqMoney
                 columns 15 this.IdentificationNumber    Format.leftPadString
@@ -67,18 +88,8 @@ type EntryCCD(batchSEC, rowInput) =
                 checkLength 94
         }
 
-    member this.ReceivingDfiIdentification
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<string> value 
-    member this.CheckDigit
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<int> value
-    member this.DfiAccountNUmber
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<string> value 
-    member this.Amount
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<decimal> value
+
+
     member this.IdentificationNumber
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value 
@@ -88,9 +99,7 @@ type EntryCCD(batchSEC, rowInput) =
     member this.DiscretionaryData
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value
-    member this.TraceNumber
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<string> value  
+
                      
 type EntryPPD(batchSEC, rowInput) =
     inherit EntryDetail(batchSEC, rowInput)

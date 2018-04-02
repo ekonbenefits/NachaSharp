@@ -13,7 +13,7 @@ type BatchControlRecord(rowInput) =
         columns     1    this.RecordTypeCode            Format.leftPadString
         columns     3    this.ServiceClassCode          Format.leftPadString
         columns     6    this.Entry_AddendaCount        Format.zerodInt
-        columns    10    this.EntryHash                 Format.zerodInt
+        columns    10    this.EntryHash                 NachaFormat.hash
         columns    12    this.TotalDebitEntryAmount     Format.reqMoney
         columns    12    this.TotalCreditEntryAmount    Format.reqMoney
         columns    10    this.CompanyIdentification     Format.rightPadString

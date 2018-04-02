@@ -80,7 +80,14 @@ type BatchHeaderRecord(rowInput) =
                                         this.Entries 
                                             |> Seq.filter(fun x-> match x.TransactionCode with Debit(_) -> true | _-> false)
                                             |> Seq.sumBy (fun x-> x.Amount)
-                                            
+                    bc.EntryHash <- 
+                        this.Entries
+                            |> Seq.map (fun x-> x.DfiAccountNUmber 
+                                                    |> Int32.TryParse
+                                                    |> function | (true, res)-> res | _ -> 0
+                                        )
+                            |> Seq.sum  
+                                
                  } |> ignore
                  ()
     
