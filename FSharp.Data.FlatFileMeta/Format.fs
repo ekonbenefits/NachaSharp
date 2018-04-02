@@ -4,6 +4,7 @@ open System
 open FSharp.Interop.Compose.System
 open System.Runtime.CompilerServices
 
+[<RequireQualifiedAccess>]
 module Format =
 
     type FormatPairs<'T> = (string -> 'T) * (int -> 'T -> string)

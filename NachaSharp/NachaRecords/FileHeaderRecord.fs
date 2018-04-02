@@ -51,29 +51,38 @@ type FileHeaderRecord(rowInput) =
          base.Calculate()
          maybeRow {
             let! fc = this.FileControl
+            
             fc.BatchCount <- this.Batches.Count
+            
+            let entries = this.Batches |> Seq.collect (fun x->x.Entries)
+            let addenda = entries |> Seq.collect (fun x -> x.Addenda)
+            
+            fc.Entry_AddendaCount <- (entries |> Seq.length) + (addenda |> Seq.length)
+            
+            fc.BlockCount <- 
+                fc.BatchCount * 2
+                + fc.Entry_AddendaCount
+                + 2
+            
          } |> ignore
         
-    override this.Setup () = 
-        FlatRowProvider.setup this <|
-            lazy ({ 
-                     columns =[
-                                MetaColumn.Make( 1, this.RecordTypeCode,     Format.leftPadString)
-                                MetaColumn.Make( 2, this.PriorityCode,       Format.zerodInt)
-                                MetaColumn.Make(10, this.ImmediateDestination, Format.leftPadString)
-                                MetaColumn.Make(10, this.ImmediateOrigin, Format.leftPadString)
-                                MetaColumn.Make( 6, this.FileCreationDate,   Format.reqYYMMDD)
-                                MetaColumn.Make( 4, this.FileCreationTime,   Format.optHHMM)
-                                MetaColumn.Make( 1, this.FileIDModifier,     Format.rightPadString)
-                                MetaColumn.Make( 3, this.RecordSize,         Format.zerodInt)
-                                MetaColumn.Make( 2, this.BlockingFactor,     Format.zerodInt)
-                                MetaColumn.Make( 1, this.FormatCode,         Format.leftPadString)
-                                MetaColumn.Make(23, this.ImmediateDestinationName, Format.rightPadString)
-                                MetaColumn.Make(23, this.ImmediateOriginName, Format.rightPadString)
-                                MetaColumn.Make( 8, this.ReferenceCode,      Format.rightPadString)
-                              ]
-                     length = 94
-                 })
+    override this.Setup () = setupMetaFor this {
+            columns     1   this.RecordTypeCode         NachaFormat.alpha
+            columns     2   this.PriorityCode           NachaFormat.numeric
+            columns     10  this.ImmediateDestination   Format.leftPadString
+            columns     10  this.ImmediateOrigin        Format.leftPadString
+            columns     6   this.FileCreationDate       Format.reqYYMMDD
+            columns     4   this.FileCreationTime       Format.optHHMM
+            columns     1   this.FileIDModifier         NachaFormat.alphaUpper
+            columns     3   this.RecordSize             NachaFormat.numeric
+            columns     2   this.BlockingFactor         NachaFormat.numeric
+            columns     1   this.FormatCode             NachaFormat.alpha
+            columns     23  this.ImmediateDestinationName NachaFormat.alpha
+            columns     23  this.ImmediateOriginName    NachaFormat.alpha
+            columns     8   this.ReferenceCode          NachaFormat.alpha
+            
+            checkLength 94
+        }
         
     member this.PriorityCode
         with get () = this.GetColumn()

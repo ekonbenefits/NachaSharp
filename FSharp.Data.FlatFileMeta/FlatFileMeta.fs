@@ -266,7 +266,10 @@ type FlatRow(rowData:string) =
     member this.GetColumn([<CallerMemberName>] ?memberName: string) : 'T =
         let start, columnIdent =
             match memberName with
-                | Some(k) -> this.ColumnMap.[k]
+                | Some(k) -> 
+                        try 
+                            this.ColumnMap.[k]
+                        with exn -> raise <| KeyNotFoundException(sprintf "Schema missing %s in %A" k this, exn)
                 | None -> Helper.raiseMissingCompilerMemberName()
         let endSlice = start - 1 + columnIdent.Length 
         let slice = this.Row.[start..endSlice]
@@ -286,7 +289,10 @@ type FlatRow(rowData:string) =
     member this.SetColumn<'T>(value:'T, [<CallerMemberName>] ?memberName: string) =
         let start, columnIdent =
             match memberName with
-                 | Some(k) -> this.ColumnMap.[k]
+                 | Some(k) ->
+                    try 
+                        this.ColumnMap.[k]
+                    with exn -> raise <| KeyNotFoundException(sprintf "Schema missing %s in %A" k this, exn)
                  | None -> Helper.raiseMissingCompilerMemberName()
         if not <| this.HelperGetAllowMutation ()  then
             invalidOp "AllowMutation is not set on root"

@@ -9,21 +9,19 @@ type FileControlRecord(rowInput) =
             return! FileControlRecord
         }
         
-    override this.Setup () = 
-        FlatRowProvider.setup this <|
-                lazy ({ 
-                         columns =[
-                                    MetaColumn.Make( 1, this.RecordTypeCode, Format.leftPadString)
-                                    MetaColumn.Make( 6, this.BatchCount, Format.zerodInt)
-                                    MetaColumn.Make( 6, this.BlockCount, Format.zerodInt)
-                                    MetaColumn.Make( 8, this.Entry_AddendaCount, Format.zerodInt)
-                                    MetaColumn.Make(10, this.EntryHash, Format.zerodInt)
-                                    MetaColumn.Make(12, this.TotalDebitEntryDollar, Format.reqMoney)
-                                    MetaColumn.Make(12, this.TotalCreditEntryDollar, Format.reqMoney)
-                                    MetaColumn.PlaceHolder(39)
-                                  ]
-                         length = 94
-                     })
+    override this.Setup () = setupMetaFor this {
+            columns     1    this.RecordTypeCode            NachaFormat.alpha
+            columns     6    this.BatchCount                NachaFormat.numeric
+            columns     6    this.BlockCount                NachaFormat.numeric
+            columns     8    this.Entry_AddendaCount        NachaFormat.numeric
+            columns    10    this.EntryHash                 NachaFormat.numeric
+            columns    12    this.TotalDebitEntryDollar     Format.reqMoney
+            columns    12    this.TotalCreditEntryDollar    Format.reqMoney
+            placeholder 39
+            
+            checkLength 94
+        }
+           
 
     member this.BatchCount 
         with get () = this.GetColumn()

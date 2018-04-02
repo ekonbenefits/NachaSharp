@@ -38,26 +38,23 @@ type BatchHeaderRecord(rowInput) =
             return bh
         }
             
-    override this.Setup () = 
-        FlatRowProvider.setup this <|
-                lazy ({ 
-                         columns =[
-                                    MetaColumn.Make( 1, this.RecordTypeCode,     Format.leftPadString)
-                                    MetaColumn.Make( 3, this.ServiceClassCode,   Format.leftPadString)
-                                    MetaColumn.Make(16, this.CompanyName,        Format.rightPadString)
-                                    MetaColumn.Make(20, this.CompanyDiscretionaryData, Format.rightPadString)
-                                    MetaColumn.Make(10, this.CompanyIdentification, Format.leftPadString)
-                                    MetaColumn.Make( 3, this.StandardEntryClass, Format.leftPadString)
-                                    MetaColumn.Make(10, this.CompanyEntryDescription, Format.rightPadString)
-                                    MetaColumn.Make( 6, this.CompanyDescriptiveDate, Format.optYYMMDD)
-                                    MetaColumn.Make( 6, this.EffectiveEntryDate, Format.reqYYMMDD)
-                                    MetaColumn.Make( 3, this.SettlementDate, Format.optJulian)
-                                    MetaColumn.Make( 1, this.OriginatorStatusCode, Format.leftPadString)
-                                    MetaColumn.Make( 8, this.OriginatingDfiIndentifications, Format.leftPadString)
-                                    MetaColumn.Make( 7, this.BatchNumber, Format.zerodInt)
-                                  ]
-                         length = 94
-                     })
+    override this.Setup () = setupMetaFor this {
+            columns     1    this.RecordTypeCode              NachaFormat.alpha
+            columns     3    this.ServiceClassCode            NachaFormat.alpha
+            columns    16    this.CompanyName                 NachaFormat.alpha
+            columns    20    this.CompanyDiscretionaryData    NachaFormat.alpha
+            columns    10    this.CompanyIdentification       NachaFormat.alpha
+            columns     3    this.StandardEntryClass          NachaFormat.alphaUpper
+            columns    10    this.CompanyEntryDescription     NachaFormat.alpha
+            columns     6    this.CompanyDescriptiveDate      Format.optYYMMDD
+            columns     6    this.EffectiveEntryDate          Format.reqYYMMDD
+            columns     3    this.SettlementDate              Format.optJulian
+            columns     1    this.OriginatorStatusCode        NachaFormat.alpha
+            columns     8    this.OriginatingDfiIndentifications    Format.leftPadString
+            columns     7    this.BatchNumber                 NachaFormat.numeric
+    
+            checkLength 94
+        }
 
     member this.Entries 
         with get () = this.GetChildList<EntryDetail>()
@@ -68,11 +65,23 @@ type BatchHeaderRecord(rowInput) =
         
     override this.Calculate () =
                  base.Calculate()
-                 match this.BatchControl with
-                    | SomeRow(bc) -> 
-                        let c = this.Entries |> Seq.sumBy (fun x->x.Addenda.Count + 1)
-                        bc.Entry_AddendaCount <- c
-                    | _ -> ()
+                 maybeRow {
+                    let! bc = this.BatchControl
+                    bc.Entry_AddendaCount <- 
+                        (this.Entries |> Seq.length)
+                        + (this.Entries |> Seq.collect (fun x->x.Addenda) |> Seq.length)
+                    
+                    bc.TotalCreditEntryAmount <- 
+                        this.Entries 
+                            |> Seq.filter(fun x-> match x.TransactionCode with Credit(_) -> true | _-> false)
+                            |> Seq.sumBy (fun x-> x.Amount)
+                 
+                    bc.TotalDebitEntryAmount <- 
+                                        this.Entries 
+                                            |> Seq.filter(fun x-> match x.TransactionCode with Debit(_) -> true | _-> false)
+                                            |> Seq.sumBy (fun x-> x.Amount)
+                                            
+                 } |> ignore
                  ()
     
         

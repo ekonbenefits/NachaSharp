@@ -8,6 +8,7 @@
     <ProjectReference Include="..\FSharp.Data.FlatFileMeta\FSharp.Data.FlatFileMeta.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NachaValues.fs" />
     <Compile Include="NachaRecords\NachaRecords.fs" />
     <Compile Include="NachaRecords\EntryDetail\EntryAddenda.fs" />
     <Compile Include="NachaRecords\EntryDetail\EntryDetail.fs" />
@@ -16,5 +17,8 @@
     <Compile Include="NachaRecords\FileControlRecord.fs" />
     <Compile Include="NachaRecords\FileHeaderRecord.fs" />
     <Compile Include="NachaFile.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Interop.Compose" Version="2.0.1-alpha36" />
   </ItemGroup>
 </Project>

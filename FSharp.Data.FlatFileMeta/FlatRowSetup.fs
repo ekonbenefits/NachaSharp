@@ -51,10 +51,13 @@ module FlatRowProvider =
             |> List.tryFind (fun x->x.IsSome)
             |> Option.flatten
 
-    let setup<'T when 'T :> FlatRow>  (_:'T) (v: DefinedMeta Lazy) : ProcessedMeta = 
-        match Cache<'T>.MetaData with
-            | Some(md) -> md
-            | None ->
+    let internal cache = Dictionary<Type,ProcessedMeta>()
+
+    let setup<'T when 'T :> FlatRow>  (row:#FlatRow) (v: DefinedMeta Lazy) : ProcessedMeta =
+        let k = row.GetType()
+        if cache.ContainsKey(k) then
+            cache.[k]
+        else
                 let meta = v.Force()
                 let sumLength = meta.columns |> List.sumBy (fun x->x.Length)
                 if sumLength <> meta.length then
@@ -73,7 +76,7 @@ module FlatRowProvider =
                                      |> Seq.map (fun (c, i) -> c.Key, (i,c))
                                      |> Map.ofSeq
                                      :> IDictionary<_,_>
-                    Cache<'T>.MetaData <- Some(result)
+                    cache.[k] <- result
                     result      
                 with
                     | ex -> raise <| InvalidDataException("Columns must have unique names", ex)
@@ -83,19 +86,8 @@ module FlatRowProvider =
 [<AutoOpen>]
 module setupExtensions =
 
-    type MetaColumn =
-        static member Make<'T>(length, [<ReflectedDefinition>] value:Expr<'T> , (getValue: string -> 'T, setValue)) =
-            
-            let key = 
-                match value with
-                | PropertyGet(_, propOrValInfo, _) -> propOrValInfo.Name
-                | ________________________________ -> invalidArg "value" "Must be a property get"
-            Column(key, length, getValue, setValue)
     
-        static member PlaceHolder(length) =
-            ColumnIdentifier("", length, true)
-    
-    type SetupMetaBuilder(fr) = 
+    type SetupMetaBuilder(fr:FlatRow) = 
         member __.Yield(x) = {columns = [];length =0}
         
         member __.Delay(x) = lazy (x())

@@ -9,25 +9,21 @@ type BatchControlRecord(rowInput) =
             return! BatchControlRecord
         }
 
-    override this.Setup () = 
-        FlatRowProvider.setup this <|
-                lazy ({ 
-                         columns =[
-                                        MetaColumn.Make( 1, this.RecordTypeCode, Format.leftPadString)
-                                        MetaColumn.Make( 3, this.ServiceClassCode, Format.leftPadString)
-                                        MetaColumn.Make( 6, this.Entry_AddendaCount, Format.zerodInt)
-                                        MetaColumn.Make(10, this.EntryHash, Format.zerodInt)
-                                        MetaColumn.Make(12, this.TotalDebitEntryAmount, Format.reqMoney)
-                                        MetaColumn.Make(12, this.TotalCreditEntryAmount, Format.reqMoney)
-                                        MetaColumn.Make(10, this.CompanyIdentification, Format.rightPadString)
-                                        MetaColumn.Make(19, this.MAC, Format.leftPadString)
-                                        MetaColumn.PlaceHolder(6)
-                                        MetaColumn.Make( 8, this.OriginatingDfiIdentification, Format.leftPadString)
-                                        MetaColumn.Make( 7, this.BatchNumber, Format.zerodInt)
-
-                                  ]
-                         length = 94
-                     })
+    override this.Setup () = setupMetaFor this {
+        columns     1    this.RecordTypeCode            Format.leftPadString
+        columns     3    this.ServiceClassCode          Format.leftPadString
+        columns     6    this.Entry_AddendaCount        Format.zerodInt
+        columns    10    this.EntryHash                 Format.zerodInt
+        columns    12    this.TotalDebitEntryAmount     Format.reqMoney
+        columns    12    this.TotalCreditEntryAmount    Format.reqMoney
+        columns    10    this.CompanyIdentification     Format.rightPadString
+        columns    19    this.MAC                       Format.leftPadString
+        placeholder 6
+        columns     8    this.OriginatingDfiIdentification    Format.leftPadString
+        columns     7    this.BatchNumber               Format.zerodInt
+        
+        checkLength 94
+    }
                      
     member this.ServiceClassCode
             with get () = this.GetColumn ()

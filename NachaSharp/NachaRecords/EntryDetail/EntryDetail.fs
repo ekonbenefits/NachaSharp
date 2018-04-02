@@ -17,15 +17,26 @@ type EntryDetail(batchSEC, rowInput) =
     member this.AddendaRecordedIndicator
         with get () = this.GetColumn<int> ()
         and set value = this.SetColumn<int> value
+        
+    member this.TransactionCode
+        with get () = this.GetColumn<TranCode> ()
+        and set value = this.SetColumn<TranCode> value
+        
+    member this.Amount
+        with get () = this.GetColumn<decimal> ()
+        and set value = this.SetColumn<decimal> value
 
 type EntryWildCard(batchSEC, rowInput) =
     inherit EntryDetail(batchSEC, rowInput)
     override __.EntrySEC with get () = batchSEC
 
     override this.Setup () = setupMetaFor this {
-                columns  1 this.RecordTypeCode Format.leftPadString
-                placeholder 77
-                columns  1 this.AddendaRecordedIndicator Format.zerodInt
+                columns      1      this.RecordTypeCode             NachaFormat.alpha
+                columns      2      this.TransactionCode            NachaFormat.tranCode
+                placeholder 26
+                columns     10      this.Amount                     Format.reqMoney
+                placeholder 39
+                columns      1      this.AddendaRecordedIndicator   NachaFormat.numeric
                 placeholder 15
                 checkLength 94
         }
@@ -41,24 +52,21 @@ type EntryCCD(batchSEC, rowInput) =
     }
     
     override this.Setup () = setupMetaFor this {
-                columns  1 this.RecordTypeCode Format.leftPadString
-                columns  2 this.TransactionCode Format.leftPadString
+                columns  1 this.RecordTypeCode          NachaFormat.alpha
+                columns  2 this.TransactionCode         NachaFormat.tranCode
                 columns  8 this.ReceivingDfiIdentification Format.leftPadString
-                columns  1 this.CheckDigit Format.zerodInt
-                columns 17 this.DfiAccountNUmber Format.leftPadString
-                columns 10 this.Amount Format.reqMoney
-                columns 15 this.IdentificationNumber Format.leftPadString
-                columns 22 this.ReceivingCompanyName Format.leftPadString
-                columns  2 this.DiscretionaryData Format.rightPadString
-                columns  1 this.AddendaRecordedIndicator Format.zerodInt
-                columns 15 this.TraceNumber Format.leftPadString
+                columns  1 this.CheckDigit              Format.zerodInt
+                columns 17 this.DfiAccountNUmber        Format.leftPadString
+                columns 10 this.Amount                  Format.reqMoney
+                columns 15 this.IdentificationNumber    Format.leftPadString
+                columns 22 this.ReceivingCompanyName    NachaFormat.alpha
+                columns  2 this.DiscretionaryData       NachaFormat.alpha
+                columns  1 this.AddendaRecordedIndicator NachaFormat.numeric
+                columns 15 this.TraceNumber             NachaFormat.alpha
                 
                 checkLength 94
         }
 
-    member this.TransactionCode
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<string> value
     member this.ReceivingDfiIdentification
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value 
@@ -86,6 +94,8 @@ type EntryCCD(batchSEC, rowInput) =
                      
 type EntryPPD(batchSEC, rowInput) =
     inherit EntryDetail(batchSEC, rowInput)
+    
+    //setup SEC type for entry
     static let entrySEC = "PPD"
     static member Construct(r) = EntryCCD(entrySEC, r)
     override __.EntrySEC with get () = entrySEC
@@ -96,24 +106,21 @@ type EntryPPD(batchSEC, rowInput) =
     
     override this.Setup () = setupMetaFor this {
     
-                 columns  1 this.RecordTypeCode Format.leftPadString
-                 columns  2 this.TransactionCode Format.leftPadString
+                 columns  1 this.RecordTypeCode         NachaFormat.alpha
+                 columns  2 this.TransactionCode        NachaFormat.tranCode
                  columns  8 this.ReceivingDfiIdentification Format.leftPadString
-                 columns  1 this.CheckDigit Format.zerodInt
-                 columns 17 this.DfiAccountNUmber Format.leftPadString
-                 columns 10 this.Amount Format.reqMoney
+                 columns  1 this.CheckDigit             NachaFormat.numeric
+                 columns 17 this.DfiAccountNUmber       Format.leftPadString
+                 columns 10 this.Amount                 Format.reqMoney
                  columns 15 this.IndividualIdentificationNumber Format.leftPadString
-                 columns 22 this.IndividualName Format.leftPadString
-                 columns  2 this.DiscretionaryData Format.rightPadString
-                 columns  1 this.AddendaRecordedIndicator Format.zerodInt
-                 columns 15 this.TraceNumber Format.leftPadString
+                 columns 22 this.IndividualName         NachaFormat.alpha
+                 columns  2 this.DiscretionaryData      NachaFormat.alpha
+                 columns  1 this.AddendaRecordedIndicator NachaFormat.numeric
+                 columns 15 this.TraceNumber            NachaFormat.alpha
                  
                  checkLength 94
         }
   
-    member this.TransactionCode
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<string> value
     member this.ReceivingDfiIdentification
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value 
