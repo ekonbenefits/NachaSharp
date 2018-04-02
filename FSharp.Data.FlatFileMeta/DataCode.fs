@@ -121,17 +121,3 @@ module DataCodeExtension =
            
            
     let dataCodeMeta = DataCodeBuilder ()
-    
-type TestCode() =
-     inherit DataCode<TestCode>()
-    
-     static member Code1
-        with get () = TestCode.GetCode()
-     
-     static member Code2 
-        with get () = TestCode.GetCode()
-     
-     override __.Setup () = DataCodeExtension.dataCodeMeta {
-            code TestCode.Code1 "01"
-            code TestCode.Code2 "02"
-      }
