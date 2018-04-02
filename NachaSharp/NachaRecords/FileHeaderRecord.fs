@@ -23,8 +23,9 @@ type FileHeaderRecord(rowInput) =
             fh.ImmediateDestinationName <- defaultArg immediateDestName ""
             fh.ImmediateOriginName <- defaultArg immediateOriginName ""
             fh.ReferenceCode <- defaultArg referenceCode ""
-            
+                        
             fh.FileControl <- SomeRow <| FileControlRecord.Create()
+            
             return fh
         }
         
@@ -73,6 +74,15 @@ type FileHeaderRecord(rowInput) =
                              entries 
                                  |> Seq.filter(fun x-> match x.TransactionCode with Debit(_) -> true | _-> false)
                                  |> Seq.sumBy (fun x-> x.Amount)
+                                
+            this.Batches |> Seq.iteri (fun i b -> 
+                                            b.BatchNumber <- i + 1
+                                            maybeRow {
+                                                 let! bc = b.BatchControl
+                                                 bc.BatchNumber <- b.BatchNumber
+                                                } |> ignore
+                                            )
+            
             
          } |> ignore
         

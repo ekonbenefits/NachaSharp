@@ -14,7 +14,7 @@ type BatchHeaderRecord(rowInput) =
                             companyEntryDesc:string,
                             effectiveEntryDate: DateTime,
                             originatorStatusCode:string,
-                            originatingDfiIdent:string,
+                            originatingDFIIdent:string,
                             batchNum:int,
                             ?companyDescretionaryData:string,
                             ?companyDescriptiveDate:DateTime
@@ -29,12 +29,18 @@ type BatchHeaderRecord(rowInput) =
             bh.CompanyEntryDescription <- companyEntryDesc
             bh.EffectiveEntryDate <- effectiveEntryDate
             bh.OriginatorStatusCode <- originatorStatusCode
-            bh.OriginatingDfiIndentifications <- originatingDfiIdent
+            bh.OriginatingDFIIdentification <- originatingDFIIdent
             bh.BatchNumber <- batchNum
             bh.CompanyDiscretionaryData <- defaultArg companyDescretionaryData ""
             bh.CompanyDescriptiveDate <- companyDescriptiveDate |> Option.toNullable
             
-            bh.BatchControl <- SomeRow <| BatchControlRecord.Create()
+            let! bc = BatchControlRecord
+            bh.BatchControl <- SomeRow <| bc
+            
+            bc.ServiceClassCode <- bh.ServiceClassCode
+            bc.CompanyIdentification <- bh.CompanyIdentification
+            bc.OriginatingDFIIdentification <- bh.OriginatingDFIIdentification
+            
             return bh
         }
             
@@ -50,7 +56,7 @@ type BatchHeaderRecord(rowInput) =
             columns     6    this.EffectiveEntryDate          Format.reqYYMMDD
             columns     3    this.SettlementDate              Format.optJulian
             columns     1    this.OriginatorStatusCode        NachaFormat.alpha
-            columns     8    this.OriginatingDfiIndentifications    Format.leftPadString
+            columns     8    this.OriginatingDFIIdentification    Format.leftPadString
             columns     7    this.BatchNumber                 NachaFormat.numeric
     
             checkLength 94
@@ -132,7 +138,7 @@ type BatchHeaderRecord(rowInput) =
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value        
 
-    member this.OriginatingDfiIndentifications
+    member this.OriginatingDFIIdentification
         with get () = this.GetColumn()
         and set value = this.SetColumn<string> value
         

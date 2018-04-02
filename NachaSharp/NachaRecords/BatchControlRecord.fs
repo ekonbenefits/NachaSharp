@@ -19,7 +19,7 @@ type BatchControlRecord(rowInput) =
         columns    10    this.CompanyIdentification     Format.rightPadString
         columns    19    this.MAC                       Format.leftPadString
         placeholder 6
-        columns     8    this.OriginatingDfiIdentification    Format.leftPadString
+        columns     8    this.OriginatingDFIIdentification    Format.leftPadString
         columns     7    this.BatchNumber               Format.zerodInt
         
         checkLength 94
@@ -46,7 +46,7 @@ type BatchControlRecord(rowInput) =
     member this.MAC
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value
-    member this.OriginatingDfiIdentification
+    member this.OriginatingDFIIdentification
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value
     member this.BatchNumber
