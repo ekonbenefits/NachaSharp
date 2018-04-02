@@ -8,7 +8,7 @@
     <Compile Include="Helper.fs" />
     <Compile Include="Format.fs" />
     <Compile Include="FlatFileMeta.fs" />
-    <Compile Include="FlatRowSetup.fs" />
+    <Compile Include="FlatRowProvider.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.Control.AsyncSeq" Version="2.0.20" />
