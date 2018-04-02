@@ -11,6 +11,7 @@ open Microsoft.FSharp.Quotations.Patterns
 
 [<RequireQualifiedAccess>]
 module FlatRowProvider =   
+    open System.Collections.Concurrent
 
     let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRow Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
@@ -48,7 +49,7 @@ module FlatRowProvider =
             |> List.tryFind (fun x->x.IsSome)
             |> Option.flatten
 
-    let internal cache = Dictionary<Type,ProcessedMeta>()
+    let internal cache = ConcurrentDictionary<Type,ProcessedMeta>()
 
     let setup (row:#FlatRow) (v: DefinedMeta Lazy) : ProcessedMeta =
         let k = row.GetType()
@@ -58,25 +59,27 @@ module FlatRowProvider =
                 let meta = v.Force()
                 let sumLength = meta.columns |> List.sumBy (fun x->x.Length)
                 if sumLength <> meta.length then
-                    raise <| InvalidDataException(sprintf "Data columns sum to %i which is not the expected value %i" sumLength meta.length)
-                try
-                    let result = meta.length,
-                                 meta.columns 
-                                    |> Seq.filter (fun x->not x.PlaceHolder) 
-                                    |> Seq.map (fun x->x.Key)
-                                    |> Enumerable.toList
-                                    :> IList<_>,
-                                 meta.columns 
-                                     |> Seq.scan (fun state i -> i.Length + state) 0
-                                     |> Seq.zip meta.columns
-                                     |> Seq.filter (fun (c, _) ->  not c.PlaceHolder)
-                                     |> Seq.map (fun (c, i) -> c.Key, (i,c))
-                                     |> Map.ofSeq
-                                     :> IDictionary<_,_>
-                    cache.[k] <- result
-                    result      
-                with
-                    | ex -> raise <| InvalidDataException("Columns must have unique names", ex)
+                    raise <| InvalidDataException(sprintf "Data columns sum to %i which is not the expected value %i of %A" sumLength meta.length row)
+                
+                let result = meta.length,
+                             meta.columns 
+                                |> Seq.filter (fun x->not x.PlaceHolder) 
+                                |> Seq.map (fun x->x.Key)
+                                |> Enumerable.toList
+                                :> IList<_>,
+                             meta.columns 
+                                 |> Seq.scan (fun state i -> i.Length + state) 0
+                                 |> Seq.zip meta.columns
+                                 |> Seq.filter (fun (c, _) ->  not c.PlaceHolder)
+                                 |> Seq.map (fun (c, i) -> c.Key, (i,c))
+                                 |> Map.ofSeq
+                                 :> IDictionary<_,_>
+                let _,keys,_ = result
+                if keys |> Seq.distinct |> Seq.length <> keys.Count then
+                    raise <| InvalidDataException(sprintf "duplicate column names defined in %A" row)
+                cache.[k] <- result
+                result      
+            
 
 
 

@@ -100,7 +100,7 @@ type FileHeaderRecord(rowInput) =
             columns     23  this.ImmediateDestinationName NachaFormat.alpha
             columns     23  this.ImmediateOriginName    NachaFormat.alpha
             columns     8   this.ReferenceCode          NachaFormat.alpha
-            
+
             checkLength 94
         }
         

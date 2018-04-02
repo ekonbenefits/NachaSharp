@@ -108,6 +108,7 @@ module rec NachaFile =
         let (|EntryDetail|_|) batchSEC = 
             FlatRowProvider.multiMatch [
                          matchEntryRecord EntryCCD batchSEC
+                         matchEntryRecord EntryCTX batchSEC
                          matchEntryRecord EntryPPD batchSEC
                          matchEntryRecord EntryWildCard batchSEC 
                        ]
@@ -116,6 +117,7 @@ module rec NachaFile =
             FlatRowProvider.matchRecord (fun x-> constructor(x) :> EntryAddenda)
         let (|EntryAddenda|_|) = 
             FlatRowProvider.multiMatch [
+                         matchEntryAddendaRecord EntryAddenda05
                          matchEntryAddendaRecord EntryAddendaWildCard
                        ]
       

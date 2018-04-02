@@ -1,6 +1,7 @@
 namespace NachaSharp
 
 open FSharp.Data.FlatFileMeta
+open FSharp.Interop.Compose.Linq
 
 [<AbstractClass>]
 type EntryDetail(batchSEC, rowInput) =
@@ -10,6 +11,17 @@ type EntryDetail(batchSEC, rowInput) =
 
     override this.IsIdentified() =
         base.IsIdentified() && batchSEC = this.EntrySEC
+        
+        
+    override this.Calculate () =
+             base.Calculate()
+             
+             //because only support adding entry 5 this works.
+             this.Addenda
+                |> Enumerable.ofType<EntryAddenda05>
+                |> Seq.iteri (fun i a -> a.AddendaSeqNum <- i + 1)
+             
+             ()
     
     member this.Addenda 
         with get () = this.GetChildList<EntryAddenda>()
@@ -100,6 +112,53 @@ type EntryCCD(batchSEC, rowInput) =
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value
 
+
+type EntryCTX(batchSEC, rowInput) =
+    inherit EntryDetail(batchSEC, rowInput)
+    static let entrySEC = "CTX"
+    static member Construct(r) = EntryCCD(entrySEC, r)
+    override __.EntrySEC with get () = entrySEC
+    
+    static member Create() = createRow {
+         return! EntryCTX.Construct
+    }
+    
+    override this.Calculate() =
+        base.Calculate()
+        this.NumberOfAddendaRecords <- this.Addenda.Count
+        ()
+    
+    override this.Setup () = setupMetaFor this {
+                columns  1 this.RecordTypeCode          NachaFormat.alpha
+                columns  2 this.TransactionCode         NachaFormat.tranCode
+                columns  8 this.ReceivingDfiIdentification Format.leftPadString
+                columns  1 this.CheckDigit              NachaFormat.numeric
+                columns 17 this.DfiAccountNUmber        Format.leftPadString
+                columns 10 this.Amount                  Format.reqMoney
+                columns 15 this.IdentificationNumber    Format.leftPadString
+                columns  4 this.NumberOfAddendaRecords  NachaFormat.numeric
+                columns 16 this.ReceivingCompanyNameOrNum    NachaFormat.alpha
+                placeholder 2
+                columns  2 this.DiscretionaryData       NachaFormat.alpha
+                columns  1 this.AddendaRecordedIndicator NachaFormat.numeric
+                columns 15 this.TraceNumber             NachaFormat.alpha
+                
+                checkLength 94
+        }
+
+    member this.NumberOfAddendaRecords
+            with get () = this.GetColumn ()
+            and set value = this.SetColumn<int> value 
+
+    member this.IdentificationNumber
+            with get () = this.GetColumn ()
+            and set value = this.SetColumn<string> value 
+    member this.ReceivingCompanyNameOrNum
+            with get () = this.GetColumn ()
+            and set value = this.SetColumn<string> value
+    member this.DiscretionaryData
+            with get () = this.GetColumn ()
+            and set value = this.SetColumn<string> value
                      
 type EntryPPD(batchSEC, rowInput) =
     inherit EntryDetail(batchSEC, rowInput)
@@ -129,19 +188,7 @@ type EntryPPD(batchSEC, rowInput) =
                  
                  checkLength 94
         }
-  
-    member this.ReceivingDfiIdentification
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<string> value 
-    member this.CheckDigit
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<int> value
-    member this.DfiAccountNUmber
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<string> value 
-    member this.Amount
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<decimal> value
+
     member this.IndividualIdentificationNumber
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value 
@@ -151,6 +198,4 @@ type EntryPPD(batchSEC, rowInput) =
     member this.DiscretionaryData
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value
-    member this.TraceNumber
-            with get () = this.GetColumn ()
-            and set value = this.SetColumn<string> value                      
+                   
