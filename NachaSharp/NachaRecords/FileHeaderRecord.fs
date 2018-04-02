@@ -63,6 +63,16 @@ type FileHeaderRecord(rowInput) =
                 fc.BatchCount * 2
                 + fc.Entry_AddendaCount
                 + 2
+                
+            fc.TotalCreditEntryAmount <- 
+                             entries
+                                 |> Seq.filter(fun x-> match x.TransactionCode with Credit(_) -> true | _-> false)
+                                 |> Seq.sumBy (fun x-> x.Amount)
+                              
+            fc.TotalDebitEntryAmount <- 
+                             entries 
+                                 |> Seq.filter(fun x-> match x.TransactionCode with Debit(_) -> true | _-> false)
+                                 |> Seq.sumBy (fun x-> x.Amount)
             
          } |> ignore
         

@@ -15,8 +15,8 @@ type FileControlRecord(rowInput) =
             columns     6    this.BlockCount                NachaFormat.numeric
             columns     8    this.Entry_AddendaCount        NachaFormat.numeric
             columns    10    this.EntryHash                 NachaFormat.numeric
-            columns    12    this.TotalDebitEntryDollar     Format.reqMoney
-            columns    12    this.TotalCreditEntryDollar    Format.reqMoney
+            columns    12    this.TotalDebitEntryAmount     Format.reqMoney
+            columns    12    this.TotalCreditEntryAmount    Format.reqMoney
             placeholder 39
             
             checkLength 94
@@ -39,10 +39,10 @@ type FileControlRecord(rowInput) =
         with get () = this.GetColumn()
         and set value = this.SetColumn<int> value
        
-    member this.TotalDebitEntryDollar
+    member this.TotalDebitEntryAmount
         with get () = this.GetColumn()
         and set value = this.SetColumn<decimal> value
 
-    member this.TotalCreditEntryDollar
+    member this.TotalCreditEntryAmount
         with get () = this.GetColumn()
         and set value = this.SetColumn<decimal> value
