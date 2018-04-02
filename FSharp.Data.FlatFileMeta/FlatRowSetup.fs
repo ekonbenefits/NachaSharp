@@ -11,6 +11,7 @@ open Microsoft.FSharp.Quotations.Patterns
 
 [<RequireQualifiedAccess>]
 module FlatRowProvider =   
+    open System.Text
     open System.Collections.Concurrent
 
     let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRow Async) = 
@@ -18,7 +19,11 @@ module FlatRowProvider =
             
     let asyncParseFile (parser:string AsyncSeq -> #FlatRow MaybeRow Async) (stream:Stream) =
         let seq = asyncSeq{
-                        use streamReader = new StreamReader(stream)
+                        use streamReader = new StreamReader(stream,
+                                                            Encoding.ASCII, 
+                                                            false, 
+                                                            1024, 
+                                                            true)
                         let mutable completed = false
                         while not (completed) do 
                             let! line = streamReader.ReadLineAsync() |> Async.AwaitTask
@@ -31,7 +36,8 @@ module FlatRowProvider =
         async {
             return! seq |> parser
         }
-        
+     
+     
     let syncParseFile parser stream = 
          asyncParseFile parser stream |> Async.RunSynchronously
 
