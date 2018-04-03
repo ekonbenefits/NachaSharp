@@ -64,6 +64,15 @@ type FileHeaderRecord(rowInput) =
         with get () = this.GetChild<FileControlRecord>(2)
         and set value = this.SetChild<FileControlRecord>(2,value)
         
+    member this.TotalRecordCount() =
+                            maybeRow {
+                                let! fc = this.FileControl
+                                return (fc.BatchCount * 2 //batch header and footer
+                                          + fc.Entry_AddendaCount //entries and addenda
+                                          + 2) // header footer
+                            } |> Option.defaultValue 0
+           
+        
     override this.Calculate () =
          base.Calculate()
          maybeRow {
@@ -76,10 +85,14 @@ type FileHeaderRecord(rowInput) =
             
             fc.Entry_AddendaCount <- (entries |> Seq.length) + (addenda |> Seq.length)
             
+            let recordCount = this.TotalRecordCount()
+            
             fc.BlockCount <- 
-                fc.BatchCount * 2
-                + fc.Entry_AddendaCount
-                + 2
+                (recordCount / this.BlockingFactor)
+                    + if recordCount % this.BlockingFactor <> 0 then
+                            1 
+                      else
+                            0
                 
             fc.TotalCreditEntryAmount <- 
                              entries

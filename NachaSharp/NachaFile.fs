@@ -40,7 +40,9 @@ module rec NachaFile =
                             let! fc = head.FileControl
                             return fc.BlockCount
                           } |> Option.defaultValue 0
-             let remainder = blocks % head.BlockingFactor
+             let remainder = head.BlockingFactor -
+                                (head.TotalRecordCount() % head.BlockingFactor)
+             
              use writer = new StreamWriter(stream, Encoding.ASCII, 1024, true)
              
              do! [0..(remainder - 1)]
@@ -50,7 +52,8 @@ module rec NachaFile =
                                     |> String.concat ""
                                     |> writer.WriteLineAsync 
                                     |> Async.AwaitTask
-                       })
+                            })
+             do! writer.FlushAsync() |> Async.AwaitTask     
          }
 
                    

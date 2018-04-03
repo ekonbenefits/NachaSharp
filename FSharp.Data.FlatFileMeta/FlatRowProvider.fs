@@ -49,17 +49,17 @@ module FlatRowProvider =
                                     | SomeRow(c) -> foldFlat state c |> ignore
             state
         let flatList = foldFlat (List()) head
-        use writer = new StreamWriter(stream,
-                                              Encoding.ASCII,
-                                              1024, 
-                                              true)
-        flatList 
-            |> AsyncSeq.ofSeq
-            |> AsyncSeq.iterAsync(fun row -> async {
-                                                        do! row.ToRawString() 
-                                                            |> writer.WriteLineAsync 
-                                                            |> Async.AwaitTask
-                                                   })
+        use writer = new StreamWriter(stream, Encoding.ASCII, 1024, true)
+        async {
+            do!flatList 
+                |> AsyncSeq.ofSeq
+                |> AsyncSeq.iterAsync(fun row -> async {
+                                                            do! row.ToRawString() 
+                                                                |> writer.WriteLineAsync 
+                                                                |> Async.AwaitTask
+                                                       })
+            do! writer.FlushAsync() |> Async.AwaitTask                                      
+        }
 
     let syncWriteFile (head:#FlatRow) (stream:Stream)  = 
          asyncWriteFile head stream |> Async.RunSynchronously
