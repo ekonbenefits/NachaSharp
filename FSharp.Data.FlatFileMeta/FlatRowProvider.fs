@@ -33,7 +33,7 @@ module FlatRowProvider =
 
     type internal WriteState = { node: FlatRow; accum: FlatRow list }
     
-    let asyncWriteFile (head:#FlatRow) (stream:Stream) =
+    let asyncWriteFile (newlineTerm:string) (head:#FlatRow) (stream:Stream) =
         
         let rec foldFlat (state:List<FlatRow>) (item:FlatRow) =
             state.Add(item)
@@ -50,6 +50,7 @@ module FlatRowProvider =
             state
         let flatList = foldFlat (List()) head
         use writer = new StreamWriter(stream, Encoding.ASCII, 1024, true)
+        writer.NewLine <- newlineTerm
         async {
             do!flatList 
                 |> AsyncSeq.ofSeq
@@ -61,22 +62,22 @@ module FlatRowProvider =
             do! writer.FlushAsync() |> Async.AwaitTask                                      
         }
 
-    let syncWriteFile (head:#FlatRow) (stream:Stream)  = 
-         asyncWriteFile head stream |> Async.RunSynchronously
+    let syncWriteFile newLineTerm (head:#FlatRow) (stream:Stream)  = 
+         asyncWriteFile newLineTerm head stream |> Async.RunSynchronously
 
     let syncParseLines (parser:string AsyncSeq -> #FlatRow MaybeRow Async) = 
             AsyncSeq.ofSeq >> parser >> Async.RunSynchronously
             
     let asyncParseFile (parser:string AsyncSeq -> #FlatRow MaybeRow Async) (stream:Stream) =
         let seq = asyncSeq{
-                        use streamReader = new StreamReader(stream,
+                        use reader = new StreamReader(stream,
                                                             Encoding.ASCII, 
                                                             false, 
                                                             1024, 
                                                             true)
                         let mutable completed = false
                         while not (completed) do 
-                            let! line = streamReader.ReadLineAsync() |> Async.AwaitTask
+                            let! line = reader.ReadLineAsync() |> Async.AwaitTask
                             let found = line |> Option.ofObj
                             match found with
                                 | Some(line) ->

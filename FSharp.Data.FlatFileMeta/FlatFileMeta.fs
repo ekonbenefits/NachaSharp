@@ -180,21 +180,29 @@ type FlatRow(rowData:string) =
     let mutable columnKeys: IList<string> = upcast List()
     let mutable columnMap: IDictionary<string, int * ColumnIdentifier> = upcast Map.empty 
     let mutable columnLength: int = 0
-    
+    let mutable allowMutation = rowInput.IsNone
+    let mutable calculating = false
     let children = Dictionary<string,RankedHierarchy>()
     
     member val Parent: FlatRow MaybeRow = NoRow with get,set
     
     member this.Root:FlatRow MaybeRow = 
-            let rec findRoot (f:FlatRow MaybeRow) =
+            let rec findRoot (f:FlatRow MaybeRow) (l:FlatRow MaybeRow) =
                 match f with 
-                    | NoRow -> f
-                    | SomeRow(p) -> findRoot p.Parent
-            findRoot this.Parent
+                    | NoRow -> l
+                    | SomeRow(p) -> findRoot p.Parent (SomeRow(p))
+            findRoot this.Parent NoRow
     
     member val ParsedLineNumber: int option = None with get,set
     
-    member val AllowMutation: bool = rowInput.IsNone with get,set
+    
+
+    
+    member this.AllowMutation with get () = allowMutation
+                              and set value =
+                                            allowMutation <- value
+                                            if allowMutation then
+                                                this.Changed()
                      
     member __.IsNew() = rowInput.IsNone
 
@@ -202,12 +210,20 @@ type FlatRow(rowData:string) =
     
     abstract PostSetup: unit -> unit
     
-    abstract Calculate: unit -> unit
+    abstract CalculateImpl: unit -> unit
     
-    default this.Calculate () =
+    member this.Calculate() =
+         if not calculating then
+             try
+                   calculating <- true
+                   this.CalculateImpl()
+             finally
+                   calculating <- false      
+    
+    default this.CalculateImpl () =
         if not <| this.HelperGetAllowMutation ()  then
             invalidOp "AllowMutation is not set on root"
-            
+
         children.Keys
             |> Seq.map this.ChildData
             |> Seq.iter (function | Child(mf) -> maybeRow {
@@ -218,10 +234,11 @@ type FlatRow(rowData:string) =
                                         l |> Enumerable.ofType<FlatRow>
                                           |> Seq.iter (fun i->i.Calculate())
                                   | _ ->())
+
                                       
     member this.Changed() =
-            this.Root |> function | SomeRow(r) -> r.Changed() 
-                                  | NoRow -> this.Calculate()
+                this.Root |> function | SomeRow(r) -> r.Changed() 
+                                      | NoRow -> this.Calculate()
     
     member this.IsMatch() = this.DoesLengthMatch() && this.IsIdentified ()
     
@@ -280,7 +297,7 @@ type FlatRow(rowData:string) =
     member internal this.HelperGetAllowMutation () =
         maybeRow { let! root = this.Root
                    return root.AllowMutation
-                 } |> Option.defaultValue this.AllowMutation
+                 } |> Option.defaultWith (fun ()-> this.AllowMutation)
      
     member private __.HelperGetChild<'T when 'T :> FlatRow> (rank:int) (key:string) : MaybeRow<'T> =
                 match children.TryGetValue(key) with
@@ -321,7 +338,12 @@ type FlatRow(rowData:string) =
                 let key = 
                     memberName
                        |> Option.defaultWith Helper.raiseMissingCompilerMemberName
-                children.[key] <- Ranked(rank,Child(value |> MaybeRow.generalize))
+                let mcr = value |> MaybeRow.generalize
+                maybeRow{
+                    let! cr = mcr
+                    cr.Parent <- SomeRow(this)
+                } |> ignore
+                children.[key] <- Ranked(rank,Child(mcr))
                 if this.HelperGetAllowMutation () then
                     this.Changed()
          
@@ -375,4 +397,3 @@ type FlatRow(rowData:string) =
         this.Changed()
  
  
-       

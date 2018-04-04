@@ -85,8 +85,8 @@ type BatchHeaderRecord(rowInput) =
         with get () = this.GetChild<BatchControlRecord>(2)
         and set value = this.SetChild<BatchControlRecord>(2,value)
         
-    override this.Calculate () =
-                 base.Calculate()
+    override this.CalculateImpl () =
+                 base.CalculateImpl()
                  maybeRow {
                     let! bc = this.BatchControl
                     bc.Entry_AddendaCount <- 
@@ -104,7 +104,7 @@ type BatchHeaderRecord(rowInput) =
                                             |> Seq.sumBy (fun x-> x.Amount)
                     bc.EntryHash <- 
                         this.Entries
-                            |> Seq.map (fun x-> x.DfiAccountNUmber 
+                            |> Seq.map (fun x-> x.ReceivingDfiIdentification 
                                                     |> Int32.TryParse
                                                     |> function | (true, res)-> res | _ -> 0
                                         )

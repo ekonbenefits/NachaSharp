@@ -29,8 +29,8 @@ type EntryDetail(batchSEC, rowInput) =
         base.IsIdentified() && batchSEC = this.EntrySEC
         
         
-    override this.Calculate () =
-             base.Calculate()
+    override this.CalculateImpl () =
+             base.CalculateImpl()
              
              //because only support adding entry 5 this works.
              this.Addenda
@@ -139,8 +139,8 @@ type EntryCTX(batchSEC, rowInput) =
          return! EntryCTX.Construct
     }
     
-    override this.Calculate() =
-        base.Calculate()
+    override this.CalculateImpl() =
+        base.CalculateImpl()
         this.NumberOfAddendaRecords <- this.Addenda.Count
         ()
     

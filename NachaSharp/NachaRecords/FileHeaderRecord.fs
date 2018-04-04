@@ -73,8 +73,8 @@ type FileHeaderRecord(rowInput) =
                             } |> Option.defaultValue 0
            
         
-    override this.Calculate () =
-         base.Calculate()
+    override this.CalculateImpl () =
+         base.CalculateImpl()
          maybeRow {
             let! fc = this.FileControl
             
@@ -105,7 +105,7 @@ type FileHeaderRecord(rowInput) =
                                  |> Seq.sumBy (fun x-> x.Amount)
                                 
             this.Batches |> Seq.iteri (fun i b -> 
-                                            b.BatchNumber <- i + 1
+                                            b.BatchNumber <- i
                                             maybeRow {
                                                  let! bc = b.BatchControl
                                                  bc.BatchNumber <- b.BatchNumber

@@ -43,7 +43,7 @@ let loadFile file =
     reader.ReadToEnd()
  
 [<Fact>]  
-let ``Write after parsing file web-debit compare to orig `` () =
+let ``Write after parsing file webdebit compare`` () =
     let filename = "web-debit.ach.txt"
     use mem = new MemoryStream()
     let parsed =  parseFile filename
@@ -53,4 +53,18 @@ let ``Write after parsing file web-debit compare to orig `` () =
     let actual = reader.ReadToEnd() |> String.trim
     let expect = loadFile filename |> String.trim
     actual |> should equal expect
-    ()   
+    ()  
+    
+[<Fact>]  
+let ``Write after parsing file all mutate webdebit`` () =
+    let filename = "web-debit.ach.txt"
+    use mem = new MemoryStream()
+    let parsed =  parseFile filename
+    parsed.AllowMutation <-true
+    NachaFile.WriteFile(parsed, mem)
+    mem.Position <- 0L
+    use reader = new StreamReader(mem)
+    let actual = reader.ReadToEnd() |> String.trim
+    let expect = loadFile filename |> String.trim
+    actual |> should equal expect
+    ()    

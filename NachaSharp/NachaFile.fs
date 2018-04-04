@@ -35,7 +35,7 @@ module rec NachaFile =
     let WriteFile(head:FileHeaderRecord, stream) = asyncWriteNachaFile head stream |> Async.RunSynchronously
 
     let internal asyncWriteNachaFile head stream = async {
-             do! FlatRowProvider.asyncWriteFile head stream
+             do! FlatRowProvider.asyncWriteFile "\n" head stream
              let blocks = maybeRow {
                             let! fc = head.FileControl
                             return fc.BlockCount
@@ -44,7 +44,7 @@ module rec NachaFile =
                                 (head.TotalRecordCount() % head.BlockingFactor)
              
              use writer = new StreamWriter(stream, Encoding.ASCII, 1024, true)
-             
+             writer.NewLine <-"\n"
              do! [0..(remainder - 1)]
                     |> AsyncSeq.ofSeq
                     |> AsyncSeq.iterAsync(fun _-> async {
