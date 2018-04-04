@@ -105,7 +105,7 @@ type FileHeaderRecord(rowInput) =
                                  |> Seq.sumBy (fun x-> x.Amount)
                                 
             this.Batches |> Seq.iteri (fun i b -> 
-                                            b.BatchNumber <- i
+                                            b.BatchNumber <- i + 1
                                             maybeRow {
                                                  let! bc = b.BatchControl
                                                  bc.BatchNumber <- b.BatchNumber

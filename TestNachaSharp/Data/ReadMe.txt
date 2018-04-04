@@ -8,4 +8,4 @@ At https://github.com/moov-io/ach/blob/master/testdata
 
 Found 
  * 20110729A.ach.txt
- * web-debit.ach.txt
+ * web-debit.ach.txt  <- bad batch numbers

@@ -42,29 +42,54 @@ let loadFile file =
     use reader = new StreamReader(stream)
     reader.ReadToEnd()
  
+ 
+let compareLines (expectedReader:TextReader) (actualReader:TextReader) =
+    let mutable  actualNext = actualReader.ReadLine()
+    let mutable  expectedNext = expectedReader.ReadLine()
+    let mutable i = 1;
+    while not <| isNull actualNext && not <| isNull expectedNext do
+        let actual = sprintf "line %i: %s" i actualNext
+        let expected = sprintf "line %i: %s" i expectedNext
+        actual |> should equal expected
+        actualNext <- actualReader.ReadLine()
+        expectedNext <- expectedReader.ReadLine()
+        i <- i + 1
+        
 [<Fact>]  
-let ``Write after parsing file webdebit compare`` () =
-    let filename = "web-debit.ach.txt"
+let ``Write after parsing file compare`` () =
+    let filename = "transactions1.ach.txt"
     use mem = new MemoryStream()
     let parsed =  parseFile filename
     NachaFile.WriteFile(parsed, mem)
     mem.Position <- 0L
-    use reader = new StreamReader(mem)
-    let actual = reader.ReadToEnd() |> String.trim
-    let expect = loadFile filename |> String.trim
-    actual |> should equal expect
-    ()  
+    use reader = new StreamReader(mem)                                 
+    use expect = new StringReader(loadFile filename) 
+    reader |> compareLines expect
+
+
+[<Fact>]   
+let ``Write after parsing file compare 2`` () =
+        let filename = "transactions2.ach.txt"
+        use mem = new MemoryStream()
+        let parsed =  parseFile filename
+        NachaFile.WriteFile(parsed, mem)
+        mem.Position <- 0L
+        use reader = new StreamReader(mem)                                 
+        use expect = new StringReader(loadFile filename) 
+        reader |> compareLines expect
+        ()  
+        
+
     
 [<Fact>]  
-let ``Write after parsing file all mutate webdebit`` () =
-    let filename = "web-debit.ach.txt"
+let ``Write after parsing file all mutate`` () =
+    let filename = "transactions1.ach.txt"
     use mem = new MemoryStream()
     let parsed =  parseFile filename
     parsed.AllowMutation <-true
     NachaFile.WriteFile(parsed, mem)
     mem.Position <- 0L
-    use reader = new StreamReader(mem)
-    let actual = reader.ReadToEnd() |> String.trim
-    let expect = loadFile filename |> String.trim
-    actual |> should equal expect
+    use reader = new StreamReader(mem)                                 
+    use expect = new StringReader(loadFile filename) 
+    reader |> compareLines expect
     ()    

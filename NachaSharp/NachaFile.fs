@@ -24,6 +24,8 @@ module rec NachaFile =
     open System.IO
     open System.Text
 
+   
+
     let ParseLines lines = FlatRowProvider.syncParseLines asyncParseLinesDef lines
     
     let ParseFile stream =  FlatRowProvider.syncParseFile asyncParseLinesDef stream
@@ -35,7 +37,7 @@ module rec NachaFile =
     let WriteFile(head:FileHeaderRecord, stream) = asyncWriteNachaFile head stream |> Async.RunSynchronously
 
     let internal asyncWriteNachaFile head stream = async {
-             do! FlatRowProvider.asyncWriteFile "\n" head stream
+             do! FlatRowProvider.asyncWriteFile "\r" head stream
              let blocks = maybeRow {
                             let! fc = head.FileControl
                             return fc.BlockCount
@@ -44,7 +46,7 @@ module rec NachaFile =
                                 (head.TotalRecordCount() % head.BlockingFactor)
              
              use writer = new StreamWriter(stream, Encoding.ASCII, 1024, true)
-             writer.NewLine <-"\n"
+             writer.NewLine <-"\r"
              do! [0..(remainder - 1)]
                     |> AsyncSeq.ofSeq
                     |> AsyncSeq.iterAsync(fun _-> async {
