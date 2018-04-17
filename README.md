@@ -1,2 +1,3 @@
-# FSharp.Data.FlatFileMeta
-Base Library of meta components to describe flat files
+# NachaSharp
+
+.NET Library to Read and Write (ACH) Nacha Files

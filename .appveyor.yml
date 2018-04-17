@@ -1,0 +1,25 @@
+image: Visual Studio 2017
+
+version: 0.8.0-alpha{build}
+
+build: off
+test: off
+
+install:
+  - ps: dotnet restore /p:Version=$Env:APPVEYOR_BUILD_VERSION
+
+test_script:
+  - ps: dotnet test /p:Version=$Env:APPVEYOR_BUILD_VERSION
+
+artifacts:
+  - path: 'NachaSharp\bin\**\*.nupkg'
+    name: NuGet
+
+deploy:
+  provider: NuGet
+  server: https://www.myget.org/F/ci-fsharp-flatfilemeta/api/v2/package
+  api_key:
+    secure: kuAmus0VoO5L9Vcqkh9n9hCZCcHnl1Q0+UsM5KX8uGpAftmkiMwtwRCrqDw1oBLR
+  skip_symbols: false
+  symbol_server: https://www.myget.org/F/ci-fsharp-flatfilemeta/symbols/api/v2/package       
+  artifact: /.*\.nupkg/
