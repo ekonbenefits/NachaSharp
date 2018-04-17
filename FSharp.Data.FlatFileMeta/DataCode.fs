@@ -36,7 +36,7 @@ type DataCode()=
     member this.ToRawString() = this.Code  
     
 [<AbstractClass>]
-type DataCode< 'T when 'T :> DataCode<'T> and  'T: ( new : unit -> 'T ) >() as self=
+type DataCode< 'T when 'T :> DataCode<'T> and  'T: ( new : unit -> 'T ) >()=
     inherit DataCode()
 
     member this.LazySetup() =

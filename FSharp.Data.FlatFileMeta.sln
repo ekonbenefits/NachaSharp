@@ -1,10 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Data.FlatFileMeta", "FSharp.Data.FlatFileMeta\FSharp.Data.FlatFileMeta.fsproj", "{CE2A6EF3-E16C-4CEB-9BBC-B52EAFE6A5B5}"
+# Visual Studio 2012
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FSharp.Data.FlatFileMeta", "FSharp.Data.FlatFileMeta\FSharp.Data.FlatFileMeta.fsproj", "{CE2A6EF3-E16C-4CEB-9BBC-B52EAFE6A5B5}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NachaSharp", "NachaSharp\NachaSharp.fsproj", "{29D864AC-42EB-4E99-BC60-4C61AF044CA7}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "NachaSharp", "NachaSharp\NachaSharp.fsproj", "{29D864AC-42EB-4E99-BC60-4C61AF044CA7}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TestNachaSharp", "TestNachaSharp\TestNachaSharp.fsproj", "{55B980A1-F3BA-4C49-8A58-CDBD874038E5}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "TestNachaSharp", "TestNachaSharp\TestNachaSharp.fsproj", "{55B980A1-F3BA-4C49-8A58-CDBD874038E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestNachaCSharp", "TestNachaCSharp\TestNachaCSharp.csproj", "{0F03CDCE-6A8E-4E33-8DBA-73EB61D4B7DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +27,9 @@ Global
 		{55B980A1-F3BA-4C49-8A58-CDBD874038E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{55B980A1-F3BA-4C49-8A58-CDBD874038E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{55B980A1-F3BA-4C49-8A58-CDBD874038E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F03CDCE-6A8E-4E33-8DBA-73EB61D4B7DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F03CDCE-6A8E-4E33-8DBA-73EB61D4B7DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F03CDCE-6A8E-4E33-8DBA-73EB61D4B7DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F03CDCE-6A8E-4E33-8DBA-73EB61D4B7DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

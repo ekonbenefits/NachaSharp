@@ -17,6 +17,7 @@
 namespace NachaSharp
 
 open System
+open System.Runtime.InteropServices
 open FSharp.Data.FlatFileMeta
 
 type BatchHeaderRecord(rowInput) =
@@ -32,8 +33,9 @@ type BatchHeaderRecord(rowInput) =
                             originatorStatusCode:string,
                             originatingDFIIdent:string,
                             batchNum:int,
-                            ?companyDescretionaryData:string,
-                            ?companyDescriptiveDate:DateTime
+                            [<Optional;DefaultParameterValue("")>] companyDescretionaryData:string,
+                            [<Optional;DefaultParameterValue(Nullable<DateTime>())>] 
+                            companyDescriptiveDate:DateTime Nullable
                          ) =
         createRow {
             let! bh = BatchHeaderRecord
@@ -47,8 +49,8 @@ type BatchHeaderRecord(rowInput) =
             bh.OriginatorStatusCode <- originatorStatusCode
             bh.OriginatingDFIIdentification <- originatingDFIIdent
             bh.BatchNumber <- batchNum
-            bh.CompanyDiscretionaryData <- defaultArg companyDescretionaryData ""
-            bh.CompanyDescriptiveDate <- companyDescriptiveDate |> Option.toNullable
+            bh.CompanyDiscretionaryData <- companyDescretionaryData
+            bh.CompanyDescriptiveDate <- companyDescriptiveDate
             
             let! bc = BatchControlRecord
             bh.BatchControl <- SomeRow <| bc

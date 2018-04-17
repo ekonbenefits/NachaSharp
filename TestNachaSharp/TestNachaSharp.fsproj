@@ -8,22 +8,16 @@
     <Compile Include="FileParsingTests.fs" />
     <Compile Include="SmokeTests.fs" />
     <Compile Include="Program.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="FsUnit.xUnit" Version="3.1.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
-    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\NachaSharp\NachaSharp.fsproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Data\20110729A.ach.txt" />
     <Content Include="Data\ReadMe.txt" />
     <Content Include="Data\transactions1.ach.txt" />
     <Content Include="Data\transactions2.ach.txt" />
     <Content Include="Data\web-debit.ach.txt" />
+    <PackageReference Include="FsUnit.xUnit" Version="3.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+    <ProjectReference Include="..\NachaSharp\NachaSharp.fsproj" />
   </ItemGroup>
 </Project>

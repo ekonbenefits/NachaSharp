@@ -18,6 +18,7 @@ namespace NachaSharp
 
 open System
 open FSharp.Data.FlatFileMeta
+open System.Runtime.InteropServices
 
 type FileHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "1")
@@ -26,9 +27,9 @@ type FileHeaderRecord(rowInput) =
                          immediateDest:string,
                          immediateOrigin:string,
                          fileIDModifier:string,
-                         ?immediateDestName: string,
-                         ?immediateOriginName: string,
-                         ?referenceCode:string
+                         [<Optional;DefaultParameterValue("")>] immediateDestName: string,
+                         [<Optional;DefaultParameterValue("")>] immediateOriginName: string,
+                         [<Optional;DefaultParameterValue("")>] referenceCode:string
                          ) = 
         createRow {
             let! fh = FileHeaderRecord
@@ -36,9 +37,9 @@ type FileHeaderRecord(rowInput) =
             fh.ImmediateDestination <- immediateDest
             fh.ImmediateOrigin <- immediateOrigin
             fh.FileIDModifier <- fileIDModifier
-            fh.ImmediateDestinationName <- defaultArg immediateDestName ""
-            fh.ImmediateOriginName <- defaultArg immediateOriginName ""
-            fh.ReferenceCode <- defaultArg referenceCode ""
+            fh.ImmediateDestinationName <-  immediateDestName
+            fh.ImmediateOriginName <-  immediateOriginName
+            fh.ReferenceCode <-  referenceCode
                         
             fh.FileControl <- SomeRow <| FileControlRecord.Create()
             

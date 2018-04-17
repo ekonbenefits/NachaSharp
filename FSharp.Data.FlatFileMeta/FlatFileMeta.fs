@@ -35,7 +35,17 @@ module CreateRowExtension =
 
 type MaybeRow<'T when 'T :> FlatRow> =
     SomeRow of 'T | NoRow
-   
+
+[<Extension>]
+type MaybeRowCSharpExtension =
+    [<Extension>]
+    static member TrySomeRow<'T when 'T :> FlatRow>
+        (this: MaybeRow<'T>, [<System.Runtime.InteropServices.Out>] some : byref<'T> ) : bool =
+        match this with
+            | NoRow -> some <- Unchecked.defaultof<'T>; false
+            | SomeRow x -> some <- x; true
+       
+
 [<AutoOpen>]
 module MaybeRowExtension =
     type MaybeRowBuilder() =
@@ -150,7 +160,7 @@ module MaybeRow =
            function 
                 | SomeRow _ -> false
                 | NoRow -> true
-
+        
 
       [<CompiledName("ToOption")>]        
       let toOption<'T when 'T :> FlatRow> (maybeRec: MaybeRow<'T>) : Option<'T> =
