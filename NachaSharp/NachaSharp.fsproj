@@ -11,7 +11,7 @@
     <PackageTags>nacha banking ach flatfile text data</PackageTags>
     <IncludeSymbols Condition="'$(OS)' == 'Windows_NT'">True</IncludeSymbols>
     <IncludeSource Condition="'$(OS)' == 'Windows_NT'">True</IncludeSource>
-    <GeneratePackageOnBuild Condition="'$(APPVEYOR)' == 'True'">True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild Condition="'$(APPVEYOR)' == 'True' And '$(FlatFileMetaIncluded)' != 'True'">True</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <DisableImplicitFSharpCoreReference>True</DisableImplicitFSharpCoreReference>
   </PropertyGroup>
@@ -27,8 +27,11 @@
     <Compile Include="NachaFile.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Condition="'$(FlatFileMetaIncluded)' != 'True'" Include="FSharp.Data.FlatFileMeta" Version="0.8.0-alpha2" />
+    <ProjectReference Condition="'$(FlatFileMetaIncluded)' == 'True'" Include="../../../../FSharp.Data.FlatFileMeta/FSharp.Data.FlatFileMeta.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="FSharp.Core" Version="4.3.2" />
-    <PackageReference Include="FSharp.Data.FlatFileMeta" Version="0.8.0-alpha2" />
     <PackageReference Include="FSharp.Interop.Compose" Version="2.0.1-alpha36" />
   </ItemGroup>
 </Project>
