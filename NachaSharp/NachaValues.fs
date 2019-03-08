@@ -83,12 +83,7 @@ module NachaValues =
 [<RequireQualifiedAccess>]
 module NachaFormat =
     module Str = 
-        let setUpper length = String.toUpper >> Format.Str.setRightPad length
-        let setLeftPadZero length value =
-                value
-                    |> String.trim
-                    |> String.Full.padLeft length '0'  
-                    |> Format.Valid.checkFinal length
+        let setUpper length = String.toUpper >> Format.Str.setRightPad length 
     
     module Int =
         let setRightMost length (value:int) = 
@@ -104,4 +99,3 @@ module NachaFormat =
     let alpha = Format.rightPadString
     let alphaUpper:Format.FormatPairs<_> = (Format.Str.getRightTrim, Str.setUpper)
     let hash:Format.FormatPairs<_> = (Format.Int.getReq, Int.setRightMost)
-    let leftPadZero:Format.FormatPairs<_> = (Format.Str.getLeftTrim, Str.setLeftPadZero)

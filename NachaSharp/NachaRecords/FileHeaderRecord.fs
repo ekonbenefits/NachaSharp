@@ -119,8 +119,8 @@ type FileHeaderRecord(rowInput) =
     override this.Setup () = setupMetaFor this {
             columns     1   this.RecordTypeCode         NachaFormat.alpha
             columns     2   this.PriorityCode           NachaFormat.numeric
-            columns     10  this.ImmediateDestination   NachaFormat.leftPadZero
-            columns     10  this.ImmediateOrigin        NachaFormat.leftPadZero
+            columns     10  this.ImmediateDestination   Format.leftPadString
+            columns     10  this.ImmediateOrigin        Format.leftPadString
             columns     6   this.FileCreationDate       Format.reqYYMMDD
             columns     4   this.FileCreationTime       Format.optHHMM
             columns     1   this.FileIDModifier         NachaFormat.alphaUpper
