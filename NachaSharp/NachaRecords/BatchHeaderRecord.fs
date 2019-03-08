@@ -19,6 +19,7 @@ namespace NachaSharp
 open System
 open System.Runtime.InteropServices
 open FSharp.Data.FlatFileMeta
+open FSharp.Interop.Compose.Linq
 
 type BatchHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "5")
@@ -89,6 +90,8 @@ type BatchHeaderRecord(rowInput) =
         
     override this.CalculateImpl () =
                  base.CalculateImpl()
+                 this.Entries
+                      |> Seq.iteri (fun i a -> a.TraceNumber <- sprintf "%s%s" this.OriginatingDFIIdentification (i.ToString("D7")) )
                  maybeRow {
                     let! bc = this.BatchControl
                     bc.Entry_AddendaCount <- 
