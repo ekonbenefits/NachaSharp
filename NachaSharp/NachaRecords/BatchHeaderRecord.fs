@@ -84,6 +84,17 @@ type BatchHeaderRecord(rowInput) =
     member this.Entries 
         with get () = this.GetChildList<EntryDetail>(1)
         
+    member this.CreateEmptyEntry():EntryDetail = createRow {
+             let castIt = (fun x -> x :> EntryDetail)
+             let f:(string->EntryDetail) = match (this.ServiceClassCode) with
+                                             | "CCD"-> EntryCCD.Construct >> castIt
+                                             | "PPD" -> EntryPPD.Construct >> castIt
+                                             | "CTX" -> EntryCTX.Construct >> castIt
+                                             |  x -> (fun row -> EntryWildCard(x, row)) >> castIt
+                                            
+             return! f
+        }
+        
     member this.BatchControl 
         with get () = this.GetChild<BatchControlRecord>(2)
         and set value = this.SetChild<BatchControlRecord>(2,value)
