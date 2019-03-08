@@ -90,8 +90,7 @@ type BatchHeaderRecord(rowInput) =
         
     override this.CalculateImpl () =
                  base.CalculateImpl()
-                 this.Entries
-                      |> Seq.iteri (fun i a -> a.TraceNumber <- sprintf "%s%s" this.OriginatingDFIIdentification (i.ToString("D7")) )
+              
                  maybeRow {
                     let! bc = this.BatchControl
                     bc.Entry_AddendaCount <- 

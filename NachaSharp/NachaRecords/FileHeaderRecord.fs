@@ -113,6 +113,9 @@ type FileHeaderRecord(rowInput) =
                                                 } |> ignore
                                             )
             
+            this.Batches
+                      |> Seq.collect(fun b -> b.Entries |> Seq.map(fun e-> (b,e)))
+                      |> Seq.iteri (fun i (b,e) -> e.TraceNumber <- sprintf "%s%s" (b.OriginatingDFIIdentification) (i.ToString("D7")) )
             
          } |> ignore
         
