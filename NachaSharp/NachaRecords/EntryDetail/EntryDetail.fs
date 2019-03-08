@@ -132,7 +132,7 @@ type EntryCCD(batchSEC, rowInput) =
 type EntryCTX(batchSEC, rowInput) =
     inherit EntryDetail(batchSEC, rowInput)
     static let entrySEC = "CTX"
-    static member Construct(r) = EntryCCD(entrySEC, r)
+    static member Construct(r) = EntryCTX(entrySEC, r)
     override __.EntrySEC with get () = entrySEC
     
     static member Create() = createRow {
@@ -181,7 +181,7 @@ type EntryPPD(batchSEC, rowInput) =
     
     //setup SEC type for entry
     static let entrySEC = "PPD"
-    static member Construct(r) = EntryCCD(entrySEC, r)
+    static member Construct(r) = EntryPPD(entrySEC, r)
     override __.EntrySEC with get () = entrySEC
     
     static member Create() = createRow {
