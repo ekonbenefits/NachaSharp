@@ -54,7 +54,7 @@ type EntryDetail(batchSEC, rowInput) =
             with get () = this.GetColumn<int> ()
             and set value = this.SetColumn<int> value
             
-    member this.DfiAccountNUmber
+    member this.DfiAccountNumber
             with get () = this.GetColumn<string> ()
             and set value = this.SetColumn<string> value 
             
@@ -79,7 +79,7 @@ type EntryWildCard(batchSEC, rowInput) =
                 columns      2      this.TransactionCode            NachaFormat.tranCode
                 columns      8      this.ReceivingDfiIdentification Format.leftPadString
                 columns      1      this.CheckDigit                 NachaFormat.numeric
-                columns     17      this.DfiAccountNUmber           Format.leftPadString
+                columns     17      this.DfiAccountNumber           NachaFormat.alpha
                 columns     10      this.Amount                     Format.reqMoney
                 placeholder 15
                 placeholder 22
@@ -105,9 +105,9 @@ type EntryCCD(batchSEC, rowInput) =
                 columns  2 this.TransactionCode         NachaFormat.tranCode
                 columns  8 this.ReceivingDfiIdentification Format.leftPadString
                 columns  1 this.CheckDigit              NachaFormat.numeric
-                columns 17 this.DfiAccountNUmber        Format.leftPadString
+                columns 17 this.DfiAccountNumber        NachaFormat.alpha
                 columns 10 this.Amount                  Format.reqMoney
-                columns 15 this.IdentificationNumber    Format.leftPadString
+                columns 15 this.IdentificationNumber    NachaFormat.alpha
                 columns 22 this.ReceivingCompanyName    NachaFormat.alpha
                 columns  2 this.DiscretionaryData       NachaFormat.alpha
                 columns  1 this.AddendaRecordedIndicator NachaFormat.numeric
@@ -149,9 +149,9 @@ type EntryCTX(batchSEC, rowInput) =
                 columns  2 this.TransactionCode         NachaFormat.tranCode
                 columns  8 this.ReceivingDfiIdentification Format.leftPadString
                 columns  1 this.CheckDigit              NachaFormat.numeric
-                columns 17 this.DfiAccountNUmber        Format.leftPadString
+                columns 17 this.DfiAccountNumber        NachaFormat.alpha
                 columns 10 this.Amount                  Format.reqMoney
-                columns 15 this.IdentificationNumber    Format.leftPadString
+                columns 15 this.IdentificationNumber    NachaFormat.alpha
                 columns  4 this.NumberOfAddendaRecords  NachaFormat.numeric
                 columns 16 this.ReceivingCompanyNameOrNum    NachaFormat.alpha
                 placeholder 2
@@ -194,9 +194,9 @@ type EntryPPD(batchSEC, rowInput) =
                  columns  2 this.TransactionCode        NachaFormat.tranCode
                  columns  8 this.ReceivingDfiIdentification Format.leftPadString
                  columns  1 this.CheckDigit             NachaFormat.numeric
-                 columns 17 this.DfiAccountNUmber       Format.leftPadString
+                 columns 17 this.DfiAccountNumber       NachaFormat.alpha
                  columns 10 this.Amount                 Format.reqMoney
-                 columns 15 this.IndividualIdentificationNumber Format.leftPadString
+                 columns 15 this.IndividualIdentificationNumber NachaFormat.alpha
                  columns 22 this.IndividualName         NachaFormat.alpha
                  columns  2 this.DiscretionaryData      NachaFormat.alpha
                  columns  1 this.AddendaRecordedIndicator NachaFormat.numeric
