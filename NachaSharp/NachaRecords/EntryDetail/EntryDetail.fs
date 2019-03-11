@@ -28,6 +28,10 @@ type EntryDetail(batchSEC, rowInput) =
     override this.IsIdentified() =
         base.IsIdentified() && batchSEC = this.EntrySEC
         
+    override this.PostSetup() =
+        base.PostSetup()
+        if this.IsNew() then
+            this.AddendaRecordedIndicator <-0
         
     override this.CalculateImpl () =
              base.CalculateImpl()
@@ -36,6 +40,8 @@ type EntryDetail(batchSEC, rowInput) =
              this.Addenda
                 |> Enumerable.ofType<EntryAddenda05>
                 |> Seq.iteri (fun i a -> a.AddendaSeqNum <- i + 1)
+             
+             this.AddendaRecordedIndicator <- this.Addenda |> Seq.length
              
              ()
     
