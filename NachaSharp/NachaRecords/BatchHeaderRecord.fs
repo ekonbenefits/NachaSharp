@@ -86,7 +86,7 @@ type BatchHeaderRecord(rowInput) =
         
     member this.CreateEmptyEntry():EntryDetail = createRow {
              let castIt = (fun x -> x :> EntryDetail)
-             let f:(string->EntryDetail) = match (this.ServiceClassCode) with
+             let f:(string->EntryDetail) = match (this.StandardEntryClass) with
                                              | "CCD"-> EntryCCD.Construct >> castIt
                                              | "PPD" -> EntryPPD.Construct >> castIt
                                              | "CTX" -> EntryCTX.Construct >> castIt
