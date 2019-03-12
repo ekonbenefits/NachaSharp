@@ -94,7 +94,16 @@ type FileHeaderRecord(rowInput) =
                             1 
                       else
                             0
-                
+               
+            fc.EntryHash <- 
+                this.Batches
+                    |> Seq.collect (fun x-> x.Entries)
+                    |> Seq.map (fun x-> x.ReceivingDfiIdentification 
+                                            |> Int32.TryParse
+                                            |> function | (true, res)-> res | _ -> 0
+                                )
+                    |> Seq.sum  
+               
             fc.TotalCreditEntryAmount <- 
                              entries
                                  |> Seq.filter(fun x-> x.TransactionCode.ActionType = Credit)
