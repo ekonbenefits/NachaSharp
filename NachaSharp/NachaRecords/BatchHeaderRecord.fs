@@ -120,10 +120,11 @@ type BatchHeaderRecord(rowInput) =
                     bc.EntryHash <- 
                         this.Entries
                             |> Seq.map (fun x-> x.ReceivingDfiIdentification 
-                                                    |> Int32.TryParse
-                                                    |> function | (true, res)-> res | _ -> 0
+                                                    |> Int64.TryParse
+                                                    |> function | (true, res)-> res | _ -> 0L
                                         )
-                            |> Seq.sum  
+                            |> Seq.sum
+                            |> (fun x -> x % 10_000_000_000L)
                                 
                  } |> ignore
                  ()

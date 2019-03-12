@@ -49,7 +49,7 @@ type BatchControlRecord(rowInput) =
             and set value = this.SetColumn<int> value
     member this.EntryHash
             with get () = this.GetColumn ()
-            and set value = this.SetColumn<int> value            
+            and set value = this.SetColumn<int64> value            
     member this.TotalDebitEntryAmount
             with get () = this.GetColumn ()
             and set value = this.SetColumn<decimal> value

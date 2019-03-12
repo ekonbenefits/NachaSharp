@@ -93,9 +93,11 @@ module NachaFormat =
                         else
                             0
             str.[start..(str.Length - 1)]
+            
+    
      
     let tranCode = Format.reqDataCode<TranCode>
     let numeric = Format.zerodInt
+    let hash = Format.zerodInt64
     let alpha = Format.rightPadString
     let alphaUpper:Format.FormatPairs<_> = (Format.Str.getRightTrim, Str.setUpper)
-    let hash:Format.FormatPairs<_> = (Format.Int.getReq, Int.setRightMost)
