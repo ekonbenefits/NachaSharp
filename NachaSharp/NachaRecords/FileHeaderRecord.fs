@@ -29,7 +29,9 @@ type FileHeaderRecord(rowInput) =
                          fileIDModifier:string,
                          [<Optional;DefaultParameterValue("")>] immediateDestName: string,
                          [<Optional;DefaultParameterValue("")>] immediateOriginName: string,
-                         [<Optional;DefaultParameterValue("")>] referenceCode:string
+                         [<Optional;DefaultParameterValue("")>] referenceCode:string,
+                         [<Optional;DefaultParameterValue(1)>] priorityCode:int,
+                         [<Optional;DefaultParameterValue(10)>] blockingFactor:int
                          ) = 
         createRow {
             let! fh = FileHeaderRecord
@@ -42,6 +44,9 @@ type FileHeaderRecord(rowInput) =
             fh.ReferenceCode <-  referenceCode
                         
             fh.FileControl <- SomeRow <| FileControlRecord.Create()
+            
+            fh.PriorityCode <- priorityCode
+            fh.BlockingFactor <- blockingFactor
             
             return fh
         }

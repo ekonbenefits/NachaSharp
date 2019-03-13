@@ -33,7 +33,6 @@ type BatchHeaderRecord(rowInput) =
                             effectiveEntryDate: DateTime,
                             originatorStatusCode:string,
                             originatingDFIIdent:string,
-                            batchNum:int,
                             [<Optional;DefaultParameterValue("")>] companyDescretionaryData:string,
                             [<Optional;DefaultParameterValue(Nullable<DateTime>())>] 
                             companyDescriptiveDate:DateTime Nullable
@@ -49,7 +48,6 @@ type BatchHeaderRecord(rowInput) =
             bh.EffectiveEntryDate <- effectiveEntryDate
             bh.OriginatorStatusCode <- originatorStatusCode
             bh.OriginatingDFIIdentification <- originatingDFIIdent
-            bh.BatchNumber <- batchNum
             bh.CompanyDiscretionaryData <- companyDescretionaryData
             bh.CompanyDescriptiveDate <- companyDescriptiveDate
             

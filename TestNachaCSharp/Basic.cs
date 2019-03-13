@@ -65,8 +65,7 @@ namespace TestNachaCSharp
                                                     "COMENtryd",
                                                     new DateTime(2018,1,1),
                                                     "D",
-                                                    "dfi dum",
-                                                    10);
+                                                    "dfi dum");
                                 
             Assert.Equal("1",header.RecordTypeCode);
         }
@@ -76,7 +75,7 @@ namespace TestNachaCSharp
             var filename = "transactions1.ach.txt";
             using(var mem = new MemoryStream()){
                 var parsed =  ParseFile(filename);
-                NachaFile.WriteFile(parsed, mem);
+                NachaFile.WriteFile(parsed, mem, "\r");
                 mem.Position = 0L;
                 using(var reader = new StreamReader(mem))
                 using(var expect = new StringReader(LoadFile(filename))){
