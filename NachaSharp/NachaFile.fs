@@ -47,7 +47,7 @@ module rec NachaFile =
                                 (head.TotalRecordCount() % head.BlockingFactor)
              
              use writer = new StreamWriter(stream, Encoding.ASCII, 1024, true)
-             writer.NewLine <-"\r"
+             writer.NewLine <-lineEnding
              do! [0..(remainder - 1)]
                     |> AsyncSeq.ofSeq
                     |> AsyncSeq.iterAsync(fun _-> async {
