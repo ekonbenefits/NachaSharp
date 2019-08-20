@@ -18,12 +18,13 @@ namespace NachaSharp
 open FSharp.Data.FlatFileMeta
 open FSharp.Control
 
+
 module rec NachaFile =
     open FSharp.Data.FlatFileMeta
     open System.Threading.Tasks
     open System.IO
     open System.Text
-
+    open System.Runtime.InteropServices
    
 
     let ParseLines lines = FlatRowProvider.syncParseLines asyncParseLinesDef lines
@@ -31,13 +32,13 @@ module rec NachaFile =
     let ParseFile stream =  FlatRowProvider.syncParseFile asyncParseLinesDef stream
     
     
-    let AsyncWriteFile(head:FileHeaderRecord, stream) = asyncWriteNachaFile head stream |> Async.StartAsTask
+    let AsyncWriteFile(head:FileHeaderRecord, stream, [<Optional;DefaultParameterValue("\r\n")>]lineEnding:string) = asyncWriteNachaFile lineEnding head stream |> Async.StartAsTask
         
        
-    let WriteFile(head:FileHeaderRecord, stream) = asyncWriteNachaFile head stream |> Async.RunSynchronously
+    let WriteFile(head:FileHeaderRecord, stream, [<Optional;DefaultParameterValue("\r\n")>]lineEnding:string) = asyncWriteNachaFile lineEnding head stream |> Async.RunSynchronously
 
-    let internal asyncWriteNachaFile head stream = async {
-             do! FlatRowProvider.asyncWriteFile "\r" head stream
+    let internal asyncWriteNachaFile lineEnding head stream = async {
+             do! FlatRowProvider.asyncWriteFile lineEnding head stream
              let blocks = maybeRow {
                             let! fc = head.FileControl
                             return fc.BlockCount
@@ -46,7 +47,7 @@ module rec NachaFile =
                                 (head.TotalRecordCount() % head.BlockingFactor)
              
              use writer = new StreamWriter(stream, Encoding.ASCII, 1024, true)
-             writer.NewLine <-"\r"
+             writer.NewLine <-lineEnding
              do! [0..(remainder - 1)]
                     |> AsyncSeq.ofSeq
                     |> AsyncSeq.iterAsync(fun _-> async {

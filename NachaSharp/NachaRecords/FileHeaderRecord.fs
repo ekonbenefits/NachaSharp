@@ -29,7 +29,9 @@ type FileHeaderRecord(rowInput) =
                          fileIDModifier:string,
                          [<Optional;DefaultParameterValue("")>] immediateDestName: string,
                          [<Optional;DefaultParameterValue("")>] immediateOriginName: string,
-                         [<Optional;DefaultParameterValue("")>] referenceCode:string
+                         [<Optional;DefaultParameterValue("")>] referenceCode:string,
+                         [<Optional;DefaultParameterValue(1)>] priorityCode:int,
+                         [<Optional;DefaultParameterValue(10)>] blockingFactor:int
                          ) = 
         createRow {
             let! fh = FileHeaderRecord
@@ -42,6 +44,9 @@ type FileHeaderRecord(rowInput) =
             fh.ReferenceCode <-  referenceCode
                         
             fh.FileControl <- SomeRow <| FileControlRecord.Create()
+            
+            fh.PriorityCode <- priorityCode
+            fh.BlockingFactor <- blockingFactor
             
             return fh
         }
@@ -94,7 +99,17 @@ type FileHeaderRecord(rowInput) =
                             1 
                       else
                             0
-                
+               
+            fc.EntryHash <- 
+                this.Batches
+                    |> Seq.collect (fun x-> x.Entries)
+                    |> Seq.map (fun x-> x.ReceivingDfiIdentification 
+                                            |> Int64.TryParse
+                                            |> function | (true, res)-> res | _ -> 0L
+                                )
+                    |> Seq.sum
+                    |> (fun x -> x % 10_000_000_000L)
+               
             fc.TotalCreditEntryAmount <- 
                              entries
                                  |> Seq.filter(fun x-> x.TransactionCode.ActionType = Credit)
@@ -113,6 +128,9 @@ type FileHeaderRecord(rowInput) =
                                                 } |> ignore
                                             )
             
+            this.Batches
+                      |> Seq.collect(fun b -> b.Entries |> Seq.map(fun e-> (b,e)))
+                      |> Seq.iteri (fun i (b,e) -> e.TraceNumber <- sprintf "%s%s" (b.OriginatingDFIIdentification) (i.ToString("D7")) )
             
          } |> ignore
         

@@ -24,8 +24,7 @@ let ``Create Blank Batch`` () =
                                         "COMENtryd",
                                         DateTime(2018,1,1),
                                         "D",
-                                        "dfi dum",
-                                        10)
+                                        "dfi dum")
                       
    header.RecordTypeCode |> should equal "1"
    
@@ -60,7 +59,7 @@ let ``Write after parsing file compare`` () =
     let filename = "transactions1.ach.txt"
     use mem = new MemoryStream()
     let parsed =  parseFile filename
-    NachaFile.WriteFile(parsed, mem)
+    NachaFile.WriteFile(parsed, mem,"\r")
     mem.Position <- 0L
     use reader = new StreamReader(mem)                                 
     use expect = new StringReader(loadFile filename) 
@@ -72,7 +71,7 @@ let ``Write after parsing file compare 2`` () =
         let filename = "transactions2.ach.txt"
         use mem = new MemoryStream()
         let parsed =  parseFile filename
-        NachaFile.WriteFile(parsed, mem)
+        NachaFile.WriteFile(parsed,mem,"\r")
         mem.Position <- 0L
         use reader = new StreamReader(mem)                                 
         use expect = new StringReader(loadFile filename) 
@@ -87,7 +86,7 @@ let ``Write after parsing file all mutate`` () =
     use mem = new MemoryStream()
     let parsed =  parseFile filename
     parsed.AllowMutation <-true
-    NachaFile.WriteFile(parsed, mem)
+    NachaFile.WriteFile(parsed, mem, "\r")
     mem.Position <- 0L
     use reader = new StreamReader(mem)                                 
     use expect = new StringReader(loadFile filename) 

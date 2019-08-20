@@ -19,6 +19,7 @@ namespace NachaSharp
 open System
 open System.Runtime.InteropServices
 open FSharp.Data.FlatFileMeta
+open FSharp.Interop.Compose.Linq
 
 type BatchHeaderRecord(rowInput) =
     inherit NachaRecord(rowInput, "5")
@@ -32,7 +33,6 @@ type BatchHeaderRecord(rowInput) =
                             effectiveEntryDate: DateTime,
                             originatorStatusCode:string,
                             originatingDFIIdent:string,
-                            batchNum:int,
                             [<Optional;DefaultParameterValue("")>] companyDescretionaryData:string,
                             [<Optional;DefaultParameterValue(Nullable<DateTime>())>] 
                             companyDescriptiveDate:DateTime Nullable
@@ -48,7 +48,6 @@ type BatchHeaderRecord(rowInput) =
             bh.EffectiveEntryDate <- effectiveEntryDate
             bh.OriginatorStatusCode <- originatorStatusCode
             bh.OriginatingDFIIdentification <- originatingDFIIdent
-            bh.BatchNumber <- batchNum
             bh.CompanyDiscretionaryData <- companyDescretionaryData
             bh.CompanyDescriptiveDate <- companyDescriptiveDate
             
@@ -83,12 +82,24 @@ type BatchHeaderRecord(rowInput) =
     member this.Entries 
         with get () = this.GetChildList<EntryDetail>(1)
         
+    member this.CreateEmptyEntry():EntryDetail = createRow {
+             let castIt = (fun x -> x :> EntryDetail)
+             let f:(string->EntryDetail) = match (this.StandardEntryClass) with
+                                             | "CCD"-> EntryCCD.Construct >> castIt
+                                             | "PPD" -> EntryPPD.Construct >> castIt
+                                             | "CTX" -> EntryCTX.Construct >> castIt
+                                             |  x -> (fun row -> EntryWildCard(x, row)) >> castIt
+                                            
+             return! f
+        }
+        
     member this.BatchControl 
         with get () = this.GetChild<BatchControlRecord>(2)
         and set value = this.SetChild<BatchControlRecord>(2,value)
         
     override this.CalculateImpl () =
                  base.CalculateImpl()
+              
                  maybeRow {
                     let! bc = this.BatchControl
                     bc.Entry_AddendaCount <- 
@@ -107,10 +118,11 @@ type BatchHeaderRecord(rowInput) =
                     bc.EntryHash <- 
                         this.Entries
                             |> Seq.map (fun x-> x.ReceivingDfiIdentification 
-                                                    |> Int32.TryParse
-                                                    |> function | (true, res)-> res | _ -> 0
+                                                    |> Int64.TryParse
+                                                    |> function | (true, res)-> res | _ -> 0L
                                         )
-                            |> Seq.sum  
+                            |> Seq.sum
+                            |> (fun x -> x % 10_000_000_000L)
                                 
                  } |> ignore
                  ()
