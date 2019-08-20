@@ -27,7 +27,8 @@
     <Compile Include="NachaFile.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(FlatFileMetaIncluded)' != 'True'" Include="FSharp.Data.FlatFileMeta" Version="0.8.1-alpha.*" />
+
+    <PackageReference Condition="'$(FlatFileMetaIncluded)' != 'True'" Include="FSharp.Data.FlatFileMeta" Version="0.9.0-alpha.*" />
     <ProjectReference Condition="'$(FlatFileMetaIncluded)' == 'True'" Include="../../../../FSharp.Data.FlatFileMeta/FSharp.Data.FlatFileMeta.fsproj" />
   </ItemGroup>
   <ItemGroup>
