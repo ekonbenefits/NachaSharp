@@ -86,7 +86,7 @@ module NachaFormat =
         let setUpper length = String.toUpper >> Format.Str.setRightPad length 
     
     module Int =
-        let setRightMost length (value:int) = 
+        let setRightMost (length, _) (value:int) = 
             let str = value |> string |> String.Full.padLeft length '0'
             let start = if str.Length > length then
                             str.Length - length
