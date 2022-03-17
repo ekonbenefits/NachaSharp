@@ -41,9 +41,8 @@ type EntryDetail(batchSEC, rowInput) =
                 |> Enumerable.ofType<EntryAddenda05>
                 |> Seq.iteri (fun i a -> a.AddendaSeqNum <- i + 1)
              
-             this.AddendaRecordedIndicator <- this.Addenda |> Seq.length
-             
-             ()
+             // field 'Addenda Record Indicator' should be either 0 or 1, regardless of amount of addenda
+             this.AddendaRecordedIndicator <- if this.Addenda |> Seq.isEmpty then 0 else 1
     
     member this.Addenda 
         with get () = this.GetChildList<EntryAddenda>(1)
