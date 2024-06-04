@@ -88,6 +88,7 @@ type BatchHeaderRecord(rowInput) =
                                              | "CCD"-> EntryCCD.Construct >> castIt
                                              | "PPD" -> EntryPPD.Construct >> castIt
                                              | "CTX" -> EntryCTX.Construct >> castIt
+                                             | "WEB" -> EntryWEB.Construct >> castIt
                                              |  x -> (fun row -> EntryWildCard(x, row)) >> castIt
                                             
              return! f

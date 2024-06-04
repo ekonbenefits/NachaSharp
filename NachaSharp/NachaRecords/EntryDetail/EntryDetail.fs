@@ -219,4 +219,43 @@ type EntryPPD(batchSEC, rowInput) =
     member this.DiscretionaryData
             with get () = this.GetColumn ()
             and set value = this.SetColumn<string> value
+
+type EntryWEB(batchSEC, rowInput) =
+    inherit EntryDetail(batchSEC, rowInput)
+    
+    //setup SEC type for entry
+    static let entrySEC = "WEB"
+    static member Construct(r) = EntryWEB(entrySEC, r)
+    override __.EntrySEC with get () = entrySEC
+    
+    static member Create() = createRow {
+            return! EntryWEB.Construct
+    }
+    
+    override this.Setup () = setupMetaFor this {
+    
+                 columns  1 this.RecordTypeCode         NachaFormat.alpha
+                 columns  2 this.TransactionCode        NachaFormat.tranCode
+                 columns  8 this.ReceivingDfiIdentification Format.leftPadString
+                 columns  1 this.CheckDigit             NachaFormat.numeric
+                 columns 17 this.DfiAccountNumber       NachaFormat.alpha
+                 columns 10 this.Amount                 Format.reqMoney
+                 columns 15 this.IndividualIdentificationNumber NachaFormat.alpha
+                 columns 22 this.IndividualName         NachaFormat.alpha
+                 columns  2 this.PaymentTypeCode        NachaFormat.alpha
+                 columns  1 this.AddendaRecordedIndicator NachaFormat.numeric
+                 columns 15 this.TraceNumber            NachaFormat.alpha
+                 
+                 checkLength 94
+        }
+
+    member this.IndividualIdentificationNumber
+            with get () = this.GetColumn ()
+            and set value = this.SetColumn<string> value 
+    member this.IndividualName
+            with get () = this.GetColumn ()
+            and set value = this.SetColumn<string> value
+    member this.PaymentTypeCode
+            with get () = this.GetColumn ()
+            and set value = this.SetColumn<string> value
                    
