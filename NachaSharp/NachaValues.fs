@@ -101,3 +101,8 @@ module NachaFormat =
     let hash = Format.zerodInt64
     let alpha = Format.rightPadString
     let alphaUpper:Format.FormatPairs<_> = (Format.Str.getRightTrim, Str.setUpper)
+    
+    let reqYYMMDD= Format.DateAndTime.reqFormat "yyMMdd"
+    let optYYMMDD = Format.DateAndTime.optFormat "yyMMdd"
+    let optJulian =  Format.optJulian
+    let optHHMM =  Format.DateAndTime.optFormat "HHmm"

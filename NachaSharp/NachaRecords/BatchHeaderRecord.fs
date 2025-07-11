@@ -69,9 +69,9 @@ type BatchHeaderRecord(rowInput) =
             columns    10    this.CompanyIdentification       NachaFormat.alpha
             columns     3    this.StandardEntryClass          NachaFormat.alphaUpper
             columns    10    this.CompanyEntryDescription     NachaFormat.alpha
-            columns     6    this.CompanyDescriptiveDate      Format.optYYMMDD
-            columns     6    this.EffectiveEntryDate          Format.reqYYMMDD
-            columns     3    this.SettlementDate              Format.optJulian
+            columns     6    this.CompanyDescriptiveDate      NachaFormat.optYYMMDD
+            columns     6    this.EffectiveEntryDate          NachaFormat.reqYYMMDD
+            columns     3    this.SettlementDate              NachaFormat.optJulian
             columns     1    this.OriginatorStatusCode        NachaFormat.alpha
             columns     8    this.OriginatingDFIIdentification    Format.leftPadString
             columns     7    this.BatchNumber                 NachaFormat.numeric
