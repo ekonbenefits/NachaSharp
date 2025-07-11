@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.0.1-alpha1</Version>
-       <Description>Nacha (ACH) Flat File Parser (Read &amp; Write)</Description>
+    <Version Condition="'$(FlatFileMetaIncluded)' != 'True'">0.0.1-beta</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Description>Nacha (ACH) Flat File Parser (Read &amp; Write)</Description>
     <Company>Ekon Benefits</Company>
     <Authors>Jay Tuley</Authors>
     <Copyright>Copyright 2018 Ekon Benefits</Copyright>
     <PackageProjectUrl>https://github.com/ekonbenefits/NachaSharp</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/ekonbenefits/NachaSharp/blob/master/LICENSE</PackageLicenseUrl>
     <PackageTags>nacha banking ach flatfile text data</PackageTags>
-    <IncludeSymbols Condition="'$(OS)' == 'Windows_NT'">True</IncludeSymbols>
-    <IncludeSource Condition="'$(OS)' == 'Windows_NT'">True</IncludeSource>
-    <GeneratePackageOnBuild Condition="'$(APPVEYOR)' == 'True' And '$(FlatFileMetaIncluded)' != 'True'">True</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <DisableImplicitFSharpCoreReference>True</DisableImplicitFSharpCoreReference>
   </PropertyGroup>
@@ -28,11 +28,8 @@
   </ItemGroup>
   <ItemGroup>
 
-    <PackageReference Condition="'$(FlatFileMetaIncluded)' != 'True'" Include="FSharp.Data.FlatFileMeta" Version="0.9.0-alpha.*" />
-    <ProjectReference Condition="'$(FlatFileMetaIncluded)' == 'True'" Include="../../../../FSharp.Data.FlatFileMeta/FSharp.Data.FlatFileMeta.fsproj" />
+    <PackageReference Condition="'$(FlatFileMetaIncluded)' != 'True'" Include="FSharp.Data.FlatFileMeta" Version="*" />
+    <ProjectReference Condition="'$(FlatFileMetaIncluded)' == 'True'" Include="../../FSharp.Data.FlatFileMeta/FSharp.Data.FlatFileMeta/FSharp.Data.FlatFileMeta.fsproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="4.3.2" />
-    <PackageReference Include="FSharp.Interop.Compose" Version="2.0.1-alpha36" />
-  </ItemGroup>
+
 </Project>

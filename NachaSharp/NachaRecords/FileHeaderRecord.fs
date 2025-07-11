@@ -139,8 +139,8 @@ type FileHeaderRecord(rowInput) =
             columns     2   this.PriorityCode           NachaFormat.numeric
             columns     10  this.ImmediateDestination   Format.leftPadString
             columns     10  this.ImmediateOrigin        Format.leftPadString
-            columns     6   this.FileCreationDate       Format.reqYYMMDD
-            columns     4   this.FileCreationTime       Format.optHHMM
+            columns     6   this.FileCreationDate       NachaFormat.reqYYMMDD
+            columns     4   this.FileCreationTime       NachaFormat.optHHMM
             columns     1   this.FileIDModifier         NachaFormat.alphaUpper
             columns     3   this.RecordSize             NachaFormat.numeric
             columns     2   this.BlockingFactor         NachaFormat.numeric

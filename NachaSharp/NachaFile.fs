@@ -19,25 +19,54 @@ open FSharp.Data.FlatFileMeta
 open FSharp.Control
 
 
-module rec NachaFile =
+module NachaFile =
     open FSharp.Data.FlatFileMeta
     open System.Threading.Tasks
     open System.IO
     open System.Text
     open System.Runtime.InteropServices
+
+
+    module internal Match =
+        let (|FileHeader|_|)=
+            FlatRowProvider.matchRecord FileHeaderRecord 
+        let (|FileControl|_|)=
+            FlatRowProvider.matchRecord FileControlRecord
+        let (|BatchHeader|_|) =
+            FlatRowProvider.matchRecord BatchHeaderRecord
+        let (|BatchControl|_|) =
+            FlatRowProvider.matchRecord BatchControlRecord
+        let matchEntryRecord constructor batchSEC =
+            FlatRowProvider.matchRecord (fun x-> constructor(batchSEC, x) :> EntryDetail)
+        let (|EntryDetail|_|) batchSEC = 
+            FlatRowProvider.multiMatch [
+                         matchEntryRecord EntryCCD batchSEC
+                         matchEntryRecord EntryCTX batchSEC
+                         matchEntryRecord EntryPPD batchSEC
+                         matchEntryRecord EntryWildCard batchSEC 
+                       ]
+    
+        let matchEntryAddendaRecord constructor  =
+            FlatRowProvider.matchRecord (fun x-> constructor(x) :> EntryAddenda)
+        let (|EntryAddenda|_|) = 
+            FlatRowProvider.multiMatch [
+                         matchEntryAddendaRecord EntryAddenda05
+                         matchEntryAddendaRecord EntryAddendaWildCard
+                       ]
+      
+    type internal ParseState =
+        {
+            head:FileHeaderRecord MaybeRow
+            batch:BatchHeaderRecord MaybeRow
+            entry:EntryDetail MaybeRow
+            addenda:int
+            finished: bool
+            lineNo:int
+        }
    
 
-    let ParseLines lines = FlatRowProvider.syncParseLines asyncParseLinesDef lines
-    
-    let ParseFile stream =  FlatRowProvider.syncParseFile asyncParseLinesDef stream
-    
-    
-    let AsyncWriteFile(head:FileHeaderRecord, stream, [<Optional;DefaultParameterValue("\r\n")>]lineEnding:string) = asyncWriteNachaFile lineEnding head stream |> Async.StartAsTask
-        
-       
-    let WriteFile(head:FileHeaderRecord, stream, [<Optional;DefaultParameterValue("\r\n")>]lineEnding:string) = asyncWriteNachaFile lineEnding head stream |> Async.RunSynchronously
 
-    let internal asyncWriteNachaFile lineEnding head stream = async {
+    let internal asyncWriteNachaFile lineEnding (head:NachaSharp.FileHeaderRecord) stream = async {
              do! FlatRowProvider.asyncWriteFile lineEnding head stream
              let blocks = maybeRow {
                             let! fc = head.FileControl
@@ -60,25 +89,7 @@ module rec NachaFile =
          }
 
                    
-    let AsyncParseFile stream =  FlatRowProvider.asyncParseFile asyncParseLinesDef stream 
-                                 |> Async.StartAsTask
-    
-    let AsyncParseLines lines = asyncParseLinesDef lines 
-                                |> Async.StartAsTask
-        
-    let internal asyncParseLinesDef (lines: string AsyncSeq) = async {
-            let! {head = result}  =
-                lines |> AsyncSeq.fold foldingParse {
-                                                        head = NoRow
-                                                        batch = NoRow
-                                                        entry = NoRow
-                                                        addenda = 0
-                                                        finished = false
-                                                        lineNo = 1
-                                                     }
-            return result
-        }
-        
+
     let internal foldingParse (state:ParseState) lineOftext =
             if state.finished then
                 state
@@ -146,39 +157,30 @@ module rec NachaFile =
                                  foundEntryAddenda add
                              | _ ->
                                 errored
-    module internal Match =
-        let (|FileHeader|_|)=
-            FlatRowProvider.matchRecord FileHeaderRecord 
-        let (|FileControl|_|)=
-            FlatRowProvider.matchRecord FileControlRecord
-        let (|BatchHeader|_|) =
-            FlatRowProvider.matchRecord BatchHeaderRecord
-        let (|BatchControl|_|) =
-            FlatRowProvider.matchRecord BatchControlRecord
-        let matchEntryRecord constructor batchSEC =
-            FlatRowProvider.matchRecord (fun x-> constructor(batchSEC, x) :> EntryDetail)
-        let (|EntryDetail|_|) batchSEC = 
-            FlatRowProvider.multiMatch [
-                         matchEntryRecord EntryCCD batchSEC
-                         matchEntryRecord EntryCTX batchSEC
-                         matchEntryRecord EntryPPD batchSEC
-                         matchEntryRecord EntryWildCard batchSEC 
-                       ]
-    
-        let matchEntryAddendaRecord constructor  =
-            FlatRowProvider.matchRecord (fun x-> constructor(x) :> EntryAddenda)
-        let (|EntryAddenda|_|) = 
-            FlatRowProvider.multiMatch [
-                         matchEntryAddendaRecord EntryAddenda05
-                         matchEntryAddendaRecord EntryAddendaWildCard
-                       ]
-      
-    type internal ParseState =
-        {
-            head:FileHeaderRecord MaybeRow
-            batch:BatchHeaderRecord MaybeRow
-            entry:EntryDetail MaybeRow
-            addenda:int
-            finished: bool
-            lineNo:int
+    let internal asyncParseLinesDef (lines: string AsyncSeq) = async {
+            let! {head = result}  =
+                lines |> AsyncSeq.fold foldingParse {
+                                                        head = NoRow
+                                                        batch = NoRow
+                                                        entry = NoRow
+                                                        addenda = 0
+                                                        finished = false
+                                                        lineNo = 1
+                                                     }
+            return result
         }
+    let AsyncParseFile stream =  FlatRowProvider.asyncParseFile asyncParseLinesDef stream 
+                                 |> Async.StartAsTask
+    
+    let AsyncParseLines lines = asyncParseLinesDef lines 
+                                |> Async.StartAsTask
+                                
+    let ParseLines lines = FlatRowProvider.syncParseLines asyncParseLinesDef lines
+    
+    let ParseFile stream =  FlatRowProvider.syncParseFile asyncParseLinesDef stream
+    
+    
+    let AsyncWriteFile(head:FileHeaderRecord, stream, [<Optional;DefaultParameterValue("\r\n")>]lineEnding:string) = asyncWriteNachaFile lineEnding head stream |> Async.StartAsTask
+        
+       
+    let WriteFile(head:FileHeaderRecord, stream, [<Optional;DefaultParameterValue("\r\n")>]lineEnding:string) = asyncWriteNachaFile lineEnding head stream |> Async.RunSynchronously
