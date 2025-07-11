@@ -28,7 +28,7 @@
   </ItemGroup>
   <ItemGroup>
 
-    <PackageReference Condition="'$(FlatFileMetaIncluded)' != 'True'" Include="FSharp.Data.FlatFileMeta" Version="0.9.0-alpha.*" />
+    <PackageReference Condition="'$(FlatFileMetaIncluded)' != 'True'" Include="FSharp.Data.FlatFileMeta" Version="*" />
     <ProjectReference Condition="'$(FlatFileMetaIncluded)' == 'True'" Include="../../FSharp.Data.FlatFileMeta/FSharp.Data.FlatFileMeta/FSharp.Data.FlatFileMeta.fsproj" />
   </ItemGroup>
 
