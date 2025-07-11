@@ -96,4 +96,31 @@ let ``Parse 20110729A.ach.txt Entries`` () =
 let ``Parse 20110729A.ach.txt addenda`` () =
     parseFile "20110729A.ach.txt" 
         |> countAddenda
-        |> should greaterThan 50       
+        |> should greaterThan 50
+
+[<Fact>]
+let ``First entry in 20110729A.ach.txt has expected Amount`` () =
+    let entries =
+        parseFile "20110729A.ach.txt"
+        |> Option.map (fun fh -> fh.Batches |> Seq.collect (fun b -> b.Entries))
+        |> Option.defaultValue Seq.empty
+    let firstEntry = entries |> Seq.tryHead
+    match firstEntry with
+    | Some entry ->
+        // The expected amount is based on the first entry line in the file: 0011900000 = 119000.00 cents = 1190.00 dollars
+        entry.Amount |> should equal 119000.00M
+    | None -> failwith "No entries found in 20110729A.ach.txt"
+
+
+[<Fact>]
+let ``First entry in 20110729A.ach.txt has expected TranCode`` () =
+    let entries =
+        parseFile "20110729A.ach.txt"
+        |> Option.map (fun fh -> fh.Batches |> Seq.collect (fun b -> b.Entries))
+        |> Option.defaultValue Seq.empty
+    let firstEntry = entries |> Seq.tryHead
+    match firstEntry with
+    | Some entry ->
+        // The expected amount is based on the first entry line in the file: 0011900000 = 119000.00 cents = 1190.00 dollars
+        entry.TransactionCode |> should equal TranCode.CheckingCredit
+    | None -> failwith "No entries found in 20110729A.ach.txt"
