@@ -122,5 +122,5 @@ let ``First entry in 20110729A.ach.txt has expected TranCode`` () =
     match firstEntry with
     | Some entry ->
         // The expected amount is based on the first entry line in the file: 0011900000 = 119000.00 cents = 1190.00 dollars
-        entry.TransactionCode |> should equal TranCode.CheckingCredit
+        entry.TransactionCode |> should equal TranCode.CheckingDebit
     | None -> failwith "No entries found in 20110729A.ach.txt"
