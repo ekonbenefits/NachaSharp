@@ -19,6 +19,47 @@ namespace NachaSharp
 open FSharp.Data.FlatFileMeta
 open FSharp.Interop.Compose.Linq
 
+/// Module for validating ABA routing numbers and check digits
+module RoutingNumberValidation =
+    
+    /// Calculates the ABA routing number check digit using the modulo 10 algorithm
+    /// Formula: 3 * (d1 + d4 + d7) + 7 * (d2 + d5 + d8) + (d3 + d6 + d9) mod 10 = 0
+    let calculateCheckDigit (routingNumber: string) : int option =
+        if routingNumber.Length <> 8 then
+            None
+        else
+            try
+                let digits = routingNumber |> Seq.map (fun c -> int c - int '0') |> Seq.toArray
+                
+                // Verify all characters are digits
+                if digits |> Array.exists (fun d -> d < 0 || d > 9) then
+                    None
+                else
+                    let sum = 3 * (digits[0] + digits[3] + digits[6]) +
+                              7 * (digits[1] + digits[4] + digits[7]) +
+                              (digits[2] + digits[5])
+                    
+                    let checkDigit = (10 - (sum % 10)) % 10
+                    Some checkDigit
+            with
+            | _ -> None
+    
+    /// Validates a complete 9-digit ABA routing number (8 digits + check digit)
+    let validateRoutingNumber (fullRoutingNumber: string) : bool =
+        if fullRoutingNumber.Length <> 9 then
+            false
+        else
+            let routingBase = fullRoutingNumber.Substring(0, 8)
+            let providedCheckDigit = 
+                try
+                    int fullRoutingNumber[8] - int '0'
+                with
+                | _ -> -1
+            
+            match calculateCheckDigit routingBase with
+            | Some calculatedCheckDigit -> calculatedCheckDigit = providedCheckDigit
+            | None -> false
+
 [<AbstractClass>]
 type EntryDetail(batchSEC, rowInput) =
     inherit NachaRecord(rowInput, "6")
@@ -43,6 +84,16 @@ type EntryDetail(batchSEC, rowInput) =
              
              // field 'Addenda Record Indicator' should be either 0 or 1, regardless of amount of addenda
              this.AddendaRecordedIndicator <- if this.Addenda |> Seq.isEmpty then 0 else 1
+             
+             // Calculate and validate routing number check digit
+             let routingNumber = this.ReceivingDfiIdentification
+             if not (System.String.IsNullOrWhiteSpace(routingNumber)) && routingNumber.Length = 8 then
+                 match RoutingNumberValidation.calculateCheckDigit routingNumber with
+                 | Some calculatedCheckDigit ->
+                     this.CheckDigit <- calculatedCheckDigit
+                 | None ->
+                     // Invalid routing number format - validation will catch this elsewhere
+                     ()
     
     member this.Addenda 
         with get () = this.GetChildList<EntryAddenda>(1)
